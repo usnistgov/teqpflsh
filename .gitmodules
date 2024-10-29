@@ -1,0 +1,15 @@
+[submodule "externals/nanobind"]
+	path = externals/nanobind
+	url = https://github.com/wjakob/nanobind
+[submodule "externals/teqp"]
+	path = externals/teqp
+	url = https://github.com/usnistgov/teqp
+[submodule "externals/geos"]
+	path = externals/geos
+	url = https://github.com/libgeos/geos.git
+[submodule "externals/Catch2"]
+	path = externals/Catch2
+	url = https://github.com/catchorg/Catch2
+[submodule "externals/nanoflann"]
+	path = externals/nanoflann
+	url = https://github.com/jlblancoc/nanoflann.git
