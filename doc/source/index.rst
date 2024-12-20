@@ -6,6 +6,7 @@ Welcome to teqpflsh's documentation!
    :caption: Contents:
 
    superancillary/index
+   polygons/index
 
    api/modules
 
