@@ -7,6 +7,7 @@ Welcome to teqpflsh's documentation!
 
    superancillary/index
    polygons/index
+   KDtree/index
 
    api/modules
 
