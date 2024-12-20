@@ -5,9 +5,10 @@ find_package(Python 3.8 COMPONENTS Interpreter Development.Module REQUIRED)
 
 set(CMAKE_CXX_STANDARD 20)
 
-set(BUILD_SHARED_LIBS TRUE "Use shared libraries for GEOS, due to the LGPL v2.1 license")
+set(BUILD_SHARED_LIBS FALSE CACHE BOOL "Use shared libraries for GEOS, due to the LGPL v2.1 license")
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/externals/geos EXCLUDE_FROM_ALL)
-set(BUILD_SHARED_LIBS FALSE "Everything else is statically linked")
+set(BUILD_SHARED_LIBS FALSE  CACHE BOOL "Everything else is statically linked")
+MESSAGE(STATUS "Fix dynamic loading of GEOS; static linking seems like the only feasible option currently")
     
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/externals/nanobind)
 
@@ -51,7 +52,7 @@ endif()
 
 # Install directive for scikit-build-core
 install(TARGETS _${NAME}_impl LIBRARY DESTINATION ${NAME})
-install(TARGETS geos LIBRARY DESTINATION ${NAME})
+# install(TARGETS geos LIBRARY DESTINATION ${NAME})
 
 # Alter the output location for editable builds so that GEOS 
 # is loaded properly
