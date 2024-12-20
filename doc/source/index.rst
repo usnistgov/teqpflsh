@@ -5,6 +5,7 @@ Welcome to teqpflsh's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   background/Background
    superancillary/index
    polygons/index
    KDtree/index
