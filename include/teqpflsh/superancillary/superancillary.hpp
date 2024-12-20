@@ -194,7 +194,7 @@ public:
     const auto xmax() const { return m_xmax; }
     const auto& coeff() const { return m_coeff; }
 
-    // Evaluate the expansion with Clenshaw's method
+    /// Evaluate the expansion with Clenshaw's method
     template<typename T>
     auto eval(const T& x) const{
         // Scale to (-1, 1)
@@ -218,6 +218,13 @@ public:
         for (auto i = 0; i < x.size(); ++i){ y(i) = eval(x(i)); }
     }
     
+    // A vectorized variant (for use with Python interface)
+    template<typename T>
+    auto eval_Eigen(const T& x, T& y) const{
+        if (x.size() != y.size()){ throw std::invalid_argument("x and y are not the same size"); }
+        y = eval(x);
+    }
+    
     /// Chebyshev-Lobatto nodes \f$\cos(\pi j/N), j = 0,..., N \f$ mapped to the range [xmin, xmax]
     Eigen::ArrayXd get_nodes_realworld() const {
         Eigen::Index N = m_coeff.size()-1;
@@ -225,10 +232,20 @@ public:
         return ((m_xmax - m_xmin)*nodes + (m_xmax + m_xmin))*0.5;
     }
     
-    // Solve for independent variable given a bracketing interval [a,b] with the use of the TOMS 748
-    // algorithm from boost which is an improvement over Brent's method (in all cases, asymptotically,
-    // acccording to the boost docs)
-    auto solve_for_x(double y, double a, double b, unsigned int bits, std::size_t max_iter, double boundsytol) const{
+    /**
+    Solve for independent variable given a bracketing interval [a,b] with the use of the TOMS 748
+    algorithm from boost which is an improvement over Brent's method (in all cases, asymptotically,
+    acccording to the boost docs)
+ 
+    \param y target value to be matched
+    \param a left bound for interval
+    \param b right bound for interval
+    \param bits number of bits to be matched in TOMS748 solver
+    \param max_iter maximum nimber of function calls
+    \params boundsytol tolerance that is considered to be the right solution
+    \return Tuple of value of x and the number of function evaluations required
+     */
+    auto solve_for_x_count(double y, double a, double b, unsigned int bits, std::size_t max_iter, double boundsytol) const{
         using namespace boost::math::tools;
         std::size_t counter = 0;
         auto f = [&](double x){ counter++; return eval(x) - y; };
@@ -240,11 +257,17 @@ public:
         return std::make_tuple((r+l)/2.0, counter);
     }
     
+    /// Return the value of x only for given value of y
+    /// \sa solve_for_x_count
+    auto solve_for_x(double y, double a, double b, unsigned int bits, std::size_t max_iter, double boundsytol) const{
+        return std::get<0>(solve_for_x_count(y, a, b, bits, max_iter, boundsytol));
+    }
+    
     // A vectorized variant (for use with Python interface)
     template<typename T>
-    auto solve_for_x_many(const T& y, double a, double b, unsigned int bits, double boundsytol, std::size_t max_iter, T& x) const{
+    auto solve_for_x_many(const T& y, double a, double b, unsigned int bits, std::size_t max_iter, double boundsytol, T& x, T& counts) const{
         if (x.size() != y.size()){ throw std::invalid_argument("x and y are not the same size"); }
-        for (auto i = 0; i < x.size(); ++i){ std::tie(x(i), std::ignore) = solve_for_x(y(i), a, b, bits, max_iter, boundsytol); }
+        for (auto i = 0; i < x.size(); ++i){ std::tie(x(i), counts(i)) = solve_for_x_count(y(i), a, b, bits, max_iter, boundsytol); }
     }
     
     ArrayType do_derivs(std::size_t Nderiv) const{
@@ -503,7 +526,7 @@ public:
                     // to be monotonic, if it is contained then a solution must exist
                     if (ei.contains_y(y)){
                         const ChebyshevExpansion<ArrayType>& e = m_expansions[ei.idx];
-                        auto [xvalue, num_steps] = e.solve_for_x(y, ei.xmin, ei.xmax, bits, max_iter, boundsftol);
+                        auto [xvalue, num_steps] = e.solve_for_x_count(y, ei.xmin, ei.xmax, bits, max_iter, boundsftol);
                         solns.emplace_back(xvalue, num_steps);
                     }
                 }

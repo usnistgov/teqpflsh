@@ -339,7 +339,9 @@ NB_MODULE(_teqpflsh_impl, m) {
      .def_prop_ro("coeff", &ce::coeff, nb::rv_policy::reference)
      .def("eval", &ce::eval<double>)
      .def("eval_many", &ce::eval_many<tensor1d>)
+     .def("eval_Eigen", &ce::eval_many<tensor1d>)
      .def("solve_for_x", &ce::solve_for_x)
+     .def("solve_for_x_count", &ce::solve_for_x_count)
      .def("solve_for_x_many", &ce::solve_for_x_many<tensor1d>)
     ;
     
