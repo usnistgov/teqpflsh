@@ -806,7 +806,7 @@ public:
         auto returner = [&](){
             SuperAncillaryTwoPhaseSolution soln;
             soln.T = T;
-//            soln.q = get_vaporquality(T, propval, k);
+            soln.q = get_vaporquality(T, val1, ch1);
             soln.counter = counter;
             return soln;
         };
