@@ -132,5 +132,6 @@ if (TEQPFLSH_TESTS)
 
   target_link_libraries(catch_tests PUBLIC teqpcpp PRIVATE Catch2WithMain)
   
+  enable_testing()
   add_test(normal_tests catch_tests)
 endif()
