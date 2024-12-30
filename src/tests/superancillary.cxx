@@ -119,22 +119,15 @@ public:
                 }
             };
         };
-        auto mem0 = get_resident_memory();
-        auto ssa = SuperAncillary(teqp::load_a_JSON_file("../src/testdata/WATER_exps.json"));
-        
-        auto mem1 = get_resident_memory();
+    
         sa.add_variable('H', getterfactory('H'));
         sa.add_variable('S', getterfactory('S'));
         sa.add_variable('U', getterfactory('U'));
-        auto mem2 = get_resident_memory();
-        std::cout << (mem2-mem0)/1024.0/1024 << " MiB" << std::endl;
         
         double Tt = 273.16;
         double Tc = 647.096;
         double eps = 1e-6;
         points = build_points(Eigen::ArrayXd::LinSpaced(300, Tt, Tc-eps), Eigen::ArrayXd::LinSpaced(300, eps, 1-eps));
-        auto mem3 = get_resident_memory();
-        std::cout << (mem3-mem2)/1024.0/1024 << " MiB" << std::endl;
     }
     void check_pair(PropertyPairs ppair){
         auto chars = pair2chars.at(ppair);
