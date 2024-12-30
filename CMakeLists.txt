@@ -86,13 +86,18 @@ else()
     endif()
 endif()
 
-if (TEQPFLSH_BUILD_TESTS)
+if (TEQPFLSH_BUILD_SNIPS)
+
+    add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/externals/Catch2")
 
     add_executable(geos_test "${CMAKE_CURRENT_SOURCE_DIR}/src/geos_test.cpp")
     target_include_directories(geos_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/externals/geos/include)
     target_link_libraries(geos_test PUBLIC geos)
     
-    add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/externals/Catch2")
+    add_executable(quadtree "${CMAKE_CURRENT_SOURCE_DIR}/src/quadtree.cpp")
+    target_include_directories(quadtree PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+    target_link_libraries(quadtree PUBLIC geos PRIVATE Catch2WithMain PRIVATE teqpcpp PRIVATE nanoflann)
+
     add_executable(quadtree "${CMAKE_CURRENT_SOURCE_DIR}/src/quadtree.cpp")
     target_include_directories(quadtree PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
     target_link_libraries(quadtree PUBLIC geos PRIVATE Catch2WithMain PRIVATE teqpcpp PRIVATE nanoflann)
@@ -102,4 +107,30 @@ if (TEQPFLSH_BUILD_TESTS)
 
     add_executable(geos_bench "${CMAKE_CURRENT_SOURCE_DIR}/src/geos_bench.cpp")
     target_link_libraries(geos_bench PUBLIC geos PRIVATE Catch2WithMain)
+endif()
+
+option (TEQPFLSH_TESTS
+        "Enable to include the test targets"
+        OFF)
+
+if (TEQPFLSH_TESTS)
+  add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/externals/Catch2")
+  file(GLOB catch_tests_files "${CMAKE_CURRENT_SOURCE_DIR}/src/tests/*.cxx")
+  message("${catch_tests_files}")
+
+  # Make all the catch and benchmarking tests
+  add_executable(catch_tests "${catch_tests_files}")
+  #if (MSVC)
+  #    target_sources(catch_tests PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/externals/Eigen/debug/msvc/eigen.natvis")
+  #endif()
+
+  # Add all the headers to the project for XCode use
+  file(GLOB_RECURSE headers "${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp")
+  target_sources(catch_tests PUBLIC ${headers})
+  
+  target_include_directories(catch_tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
+  target_link_libraries(catch_tests PUBLIC teqpcpp PRIVATE Catch2WithMain)
+  
+  add_test(normal_tests catch_tests)
 endif()
