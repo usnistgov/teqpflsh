@@ -811,10 +811,10 @@ public:
             return soln;
         };
         
-        if (std::abs(fTmin) < 1e-13){
+        if (std::abs(fTmin) < boundsftol){
             T = Tmin; return returner();
         }
-        if (std::abs(fTmax) < 1e-13){
+        if (std::abs(fTmax) < boundsftol){
             T = Tmax; return returner();
         }
         if (fTmin*fTmax > 0){
