@@ -937,7 +937,7 @@ public:
 
         switch(pair){
             // Case 0, PT is always single-phase, by definition
-//            case PropertyPairs::PT: throw std::invalid_argument("Not yet supported");
+            case PropertyPairs::PT: throw std::invalid_argument("PT inputs are trivial");
                 
             // Case 1, T is a given variable
             case PropertyPairs::DT:
