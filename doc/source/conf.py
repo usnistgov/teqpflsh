@@ -68,7 +68,7 @@ doxylink = {
 # a list of builtin themes.
 #
 if True:
-    html_theme = 'alabaster'
+    html_theme = 'furo'
 else:
     html_theme = 'insipid'
 

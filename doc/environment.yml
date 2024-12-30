@@ -12,6 +12,7 @@ dependencies:
   - imagemagick
   - pip:
     - breathe
+    - furo
     - teqp
     - numpy
     - scipy
