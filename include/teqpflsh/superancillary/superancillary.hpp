@@ -1047,7 +1047,7 @@ public:
                 }
             }
             catch(std::exception&e){
-                std::cout << e.what() << " for " << val1(i) << "," << val2(i) << std::endl;
+//                std::cout << e.what() << " for " << val1(i) << "," << val2(i) << std::endl;
                 T(i) = -2;
                 q(i) = -2;
                 count(i) = -2;
