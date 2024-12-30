@@ -1,6 +1,10 @@
 #pragma once
 
+#include <iostream>
+
 #include "boost/math/tools/toms748_solve.hpp"
+
+#include "teqpflsh/properties/properties.hpp"
 
 namespace teqpflsh{
 namespace superancillary{
