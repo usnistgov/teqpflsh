@@ -848,7 +848,7 @@ public:
             Tsearchrange = std::make_tuple(y1, y2);
         }
         else{
-            throw std::invalid_argument("cannot have number of solutions other than 1 or 2; got"+std::to_string(rhosat_soln_count)+" solutions");
+            throw std::invalid_argument("cannot have number of solutions other than 1 or 2; got "+std::to_string(rhosat_soln_count)+" solutions");
         }
         auto [a, b] = Tsearchrange;
         return iterate_for_Tq_XY(a, b, 'D', rho, k, propval, bits, max_iter, boundsftol);
