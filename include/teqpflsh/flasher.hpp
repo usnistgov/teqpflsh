@@ -692,7 +692,7 @@ public:
                 newtontime(i) = r.newton_duration_us;
                 candtime(i) = r.candidate_duration_us;
             }catch(std::exception&e){
-                std::cout << e.what() << std::endl;
+//                std::cout << e.what() << std::endl;
                 T(i) = -1;
                 rho(i) = -1;
                 steps(i) = -1;
