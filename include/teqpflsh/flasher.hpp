@@ -535,10 +535,16 @@ public:
           stopping_conditions(std::move(other.stopping_conditions)),
           regions(std::move(other.regions)){};
     
+    /// Get the mole fractions in use
     auto get_mole_fractions() const { return mole_fractions; }
     
     /** 
      Add a region in which the \f$T,\rho\f$ coordinates of the outer edge are defined
+     
+     \param T The array of temperatures, in K
+     \param rho The array of densities, in mol/m3
+     \param NT The number of points in temperature direction to generate
+     \param Nrho The number of points in the density direction to generate
      */
     void add_region(const ArrayType &T, const ArrayType &rho, std::size_t NT, std::size_t Nrho){
         ThermodynamicRegion_t reg(T, rho, mole_fractions, alphamodel, NT, Nrho);
