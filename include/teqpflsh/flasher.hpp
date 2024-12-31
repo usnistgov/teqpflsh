@@ -679,7 +679,7 @@ public:
         throw std::invalid_argument("Not possible to get here, make the compiler happy");
     }
     
-    /// A vectorized version, mostly for profiling purposes in Python level
+    /// A vectorized version, mostly for profiling purposes in Python
     template<typename Container>
     void flash_many(properties::PropertyPairs pair, const Container& val1, const Container& val2, Container&T, Container&rho, Container&steps, Container&maxabsr, Container&newtontime, Container&candtime) const {
         for (auto i = 0; i < val1.size(); ++i){
