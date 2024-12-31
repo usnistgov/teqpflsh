@@ -35,7 +35,7 @@ if not on_actions:
     sphinx_pre_run.run()
 
 ### -- Auto-generate API documentation -----------------------------------------
-subprocess.check_output(f'sphinx-apidoc -f -o api {os.path.dirname(teqpflsh.__file__)}', shell=True, cwd=here)
+subprocess.check_output(f'sphinx-apidoc --private -f -o api {os.path.dirname(teqpflsh.__file__)}', shell=True, cwd=here)
 
 # -- General configuration ---------------------------------------------------
 
