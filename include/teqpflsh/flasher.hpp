@@ -730,7 +730,7 @@ public:
     const std::shared_ptr<properties::interfaces::HelmholtzInterface> helm;
     
     MainFlasher(RegionedFlasher&& regions,
-                const std::optional<std::string>& ancillary_data,
+                const std::optional<superancillary::SuperAncillary<Eigen::ArrayXd>>& ancillary_data,
                 const std::shared_ptr<properties::interfaces::HelmholtzInterface>& helm
                 ) : regioned_flasher(std::move(regions)), superanc(ancillary_data), helm(helm) {}
     
@@ -769,7 +769,10 @@ public:
     }
     
     template<typename Container>
-    std::optional<FlashSolution> flash_many(properties::PropertyPairs proppair, const Container& val1, const Container& val2, Container& T, Container& rho, Container& q){
+    void flash_many(properties::PropertyPairs proppair, const Container& val1, const Container& val2, Container& T, Container& rho, Container& q){
+        if (std::set<std::size_t>({val1.size(), val2.size(), T.size(), rho.size(), q.size()}).size() != 1){
+            throw std::invalid_argument("val1, val2, T, rho, q are not all the same size");
+        }
         for (auto i = 0; i < val1.size(); ++i){
             try{
                 auto optsoln = flash(proppair, val1(i), val2(i));
