@@ -550,6 +550,14 @@ public:
         ThermodynamicRegion_t reg(T, rho, mole_fractions, alphamodel, NT, Nrho);
         regions.push_back(std::move(reg));
     }
+    
+    /**
+     Remove all regions
+     */
+    void remove_all_regions(){
+        regions.clear();
+    }
+    
     /// Get a const view of the regions allowing for read-only access to the regions and their subobjects
     const auto& get_regions_ro() const {
         return regions;
