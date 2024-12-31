@@ -642,7 +642,7 @@ public:
                 r.T = iter.get_T();
                 r.rho = iter.get_rho();
                 r.step_count = iter.get_step_count();
-                r.maxabsr = maxabsr;
+                r.maxabsr = iter.get_maxabsr();
                 r.reason = reason;
                 r.msg = iter.get_message();
                 r.newton_duration_us = newton_duration_us;
