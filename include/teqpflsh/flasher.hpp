@@ -511,7 +511,7 @@ private:
     /// Check if a pair is ready to be used to do a flash calculation
     bool pair_is_available(properties::PropertyPairs pair) const {
         if (regions.size() == 0){
-            throw std::invalid_argument("At lest one region is required");
+            throw std::invalid_argument("At least one region is required");
         }
         return regions[0].has_pair(pair);
     }

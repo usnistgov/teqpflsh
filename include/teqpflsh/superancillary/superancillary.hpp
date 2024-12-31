@@ -625,7 +625,7 @@ public:
                 return v.value();
             }
             else{
-                throw std::invalid_argument("unable to get the variable "+std::to_string(k)+", make sure it has been added already");
+                throw std::invalid_argument("unable to get the variable "+std::string(1, k)+", make sure it has been added to superancillary");
             }
         };
         switch(k){
