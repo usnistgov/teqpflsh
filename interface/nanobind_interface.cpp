@@ -233,10 +233,11 @@ NB_MODULE(_teqpflsh_impl, m) {
         .def_prop_ro("transformed_regions", &tr::get_transformed_regions, nb::rv_policy::reference)
         .def_prop_ro("propset_bounding", &tr::get_propset_bounding, nb::rv_policy::reference)
         .def_prop_ro("propset_Trhogrid", &tr::get_propset_Trhogrid, nb::rv_policy::reference)
-        .def("add_pair", &tr::add_pair, nb::kw_only(), "ppair"_a, "Nsplit"_a, "and_kdtree"_a = true)
+        .def("add_pair", &tr::add_pair, nb::kw_only(), "proppair"_a, "Nsplit"_a, "and_kdtree"_a = true)
         .def("has_pair", &tr::has_pair)
         .def("get_transformed_region", &tr::get_transformed_region)
         .def("get_kdtree", &tr::get_kdtree)
+        .def("get_starting_Trho_many", &tr::get_starting_Trho_many<tensor1d>, "proppair"_a, "val1"_a, "val2"_a, "T"_a, "rho"_a, "d2"_a)
     ;
     
     using ps = PropertySet<Eigen::ArrayXd>;
@@ -300,6 +301,7 @@ NB_MODULE(_teqpflsh_impl, m) {
         .def("calc_J", &nri::calc_J)
         .def("calc_vals", &nri::calc_vals)
         .def("calc_maxabsr", &nri::calc_maxabsr)
+        .def("get_maxabsr", &nri::get_maxabsr)
         
         .def("take_steps", &nri::take_steps, "N"_a)
         .def("path_integration", &nri::path_integration)
@@ -322,11 +324,13 @@ NB_MODULE(_teqpflsh_impl, m) {
     nb::class_<RegionedFlasher>(m, "RegionedFlasher")
      .def(nb::init<const std::string&, const std::string&, const ArrayType&>(), nb::kw_only(), "ideal_gas"_a, "resid"_a, "mole_fractions"_a)
      .def("add_region", &RegionedFlasher::add_region, "T"_a, "rho"_a, "NT"_a, "Nrho"_a)
+     .def("remove_all_regions", &RegionedFlasher::remove_all_regions)
      .def("get_regions_ro", &RegionedFlasher::get_regions_ro, nb::rv_policy::reference)
      .def("get_regions_rw", &RegionedFlasher::get_regions_rw, nb::rv_policy::reference)
      .def("get_quadtree_intersections", &RegionedFlasher::get_quadtree_intersections, nb::rv_policy::reference)
      .def("get_NRIterator", &RegionedFlasher::get_NRIterator)
      .def("get_starting_Trho", &RegionedFlasher::get_starting_Trho, nb::rv_policy::reference)
+     
      .def("flash", &RegionedFlasher::flash)
      .def("flash_many", &RegionedFlasher::flash_many<tensor1d>)
     ;
@@ -414,6 +418,11 @@ NB_MODULE(_teqpflsh_impl, m) {
         .def_ro("Nphases", &FlashSolution::Nphases)
         .def_ro("phases", &FlashSolution::phases);
     
+    nb::class_<TrhoLookup>(m, "TrhoLookup")
+        .def_ro("T", &TrhoLookup::T)
+        .def_ro("rho", &TrhoLookup::rho)
+        .def_ro("d2", &TrhoLookup::d2);
+    
     using namespace teqpflsh::properties::interfaces;
     nb::class_<HelmholtzInterface>(m, "HelmholtzInterface");
     nb::class_<teqpHelmholtzInterface, HelmholtzInterface>(m, "teqpHelmholtzInterface")
@@ -421,9 +430,9 @@ NB_MODULE(_teqpflsh_impl, m) {
     
     using mf = teqpflsh::MainFlasher;
     nb::class_<mf>(m, "MainFlasher")
-      .def(nb::init<RegionedFlasher&&, const std::optional<std::string>&, const std::shared_ptr<HelmholtzInterface>>(), nb::kw_only(), "regions"_a, "superancillary"_a, "helm"_a)
+        .def(nb::init<RegionedFlasher&&, const std::optional<sa>&, const std::shared_ptr<HelmholtzInterface>>(), nb::kw_only(), "regions"_a, "superancillary"_a, "helm"_a)
       .def("flash", &mf::flash)
-      .def("flash_many", &mf::flash_many<tensor1d>)
+      .def("flash_many", &mf::flash_many<tensor1d>, "proppair"_a, "val1"_a, "val2"_a, "T"_a, "rho"_a, "q"_a)
       .def_prop_ro("regioned_flasher", &mf::get_regioned_flasher, nb::rv_policy::reference)
     ;
     
