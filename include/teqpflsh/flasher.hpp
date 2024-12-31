@@ -327,6 +327,10 @@ auto geomspace(const Container& v, Eigen::Index N){
     return (Eigen::ArrayXd::LinSpaced(N, log(min_), log(max_)).exp()).eval();
 }
 
+struct TrhoLookup{
+    double T, rho, d2;
+};
+
 /**
  A class that contains all the transformed polygons as well as K-D trees for each input pair
  that indexes back to the T, rho coordinates used to define the K-D tree
@@ -420,12 +424,12 @@ public:
 
     auto has_pair(PropertyPairs pair) const { return transformed_regions.contains(pair); }
     
-    std::optional<std::tuple<double, double, double>> get_starting_Trho(PropertyPairs pair, double val1, double val2) const{
+    std::optional<TrhoLookup> get_starting_Trho(PropertyPairs pair, double val1, double val2) const{
         
         const auto& kd = kdtrees.at(pair);
         auto [idx, d2] = kd->get_nearest_indexd2(val1, val2);
         auto [T, rho] = propset_Trhogrid.get_Trho(idx);
-        return std::make_tuple(T, rho, d2);
+        return TrhoLookup(T, rho, d2);
 //
 //        const auto& tr = transformed_regions.at(pair);
 //        // First check whether even in envelope (bounding box) of the transformed polygon
@@ -444,6 +448,32 @@ public:
 //                return std::nullopt;
 //            }
 //        }
+    }
+    
+    
+    template<typename Container>
+    void get_starting_Trho_many(PropertyPairs pair, const Container& val1, const Container& val2, Container& T, Container& rho, Container& d2) const {
+        for (auto i = 0; i < val1.size(); ++i){
+            try{
+                auto o = get_starting_Trho(pair, val1(i), val2(i));
+                if (o){
+                    auto& v = o.value();
+                    T(i) = v.T;
+                    rho(i) = v.rho;
+                    d2(i) = v.d2;
+                }
+                else{
+                    T(i) = -2;
+                    rho(i) = -2;
+                    d2(i) = -2;
+                }
+            }catch(std::exception&e){
+                std::cout << e.what() << std::endl;
+                T(i) = -1;
+                rho(i) = -1;
+                d2(i) = -1;
+            }
+        }
     }
     
     auto& get_propset_bounding() const { return propset_bounding; }
@@ -544,13 +574,13 @@ public:
     }
     
     /// Get starting values for temperature and density
+    ///
     auto get_starting_Trho(properties::PropertyPairs key, double val1, double val2) const{
-        std::vector<std::tuple<const ThermodynamicRegion_t*, double, double, double>> intersections;
-        for (auto& reg: regions){
+        std::vector<std::tuple<const ThermodynamicRegion_t*, TrhoLookup>> intersections;
+        for (const auto& reg: regions){
             auto optTrho = reg.get_starting_Trho(key, val1, val2);
             if (optTrho){
-                auto [T, rho, d2] = optTrho.value();
-                intersections.emplace_back(&reg, T, rho, d2);
+                intersections.emplace_back(&reg, std::move(optTrho.value()));
             }
         }
         return intersections;
@@ -563,33 +593,32 @@ public:
     auto flash(const properties::PropertyPairs pair, double val1, double val2) const{
         using namespace std::chrono;
         
-        auto start_outer = high_resolution_clock::now();
-        
         if (!pair_is_available(pair)){
             throw std::invalid_argument("This pair is not available");
         }
         
+        auto start_outer = high_resolution_clock::now();
         // Lookup the starting values of temperature and density;
         // and sort in terms of d^2 so the first entry will be the starting point in the most
         // likely good candidate region
         auto candidates = get_starting_Trho(pair, val1, val2);
-        std::sort(candidates.begin(), candidates.end(), [](auto& t1, auto& t2){ return std::get<3>(t1) < std::get<3>(t2); });
-//        if (candidates.size() != 1){
-//            throw std::invalid_argument("Incorrect region count ("+std::to_string(candidates.size())+") for inputs: "+std::to_string(val1) + "," + std::to_string(val2));
-//        }
+        if (candidates.size() > 1){
+            std::sort(candidates.begin(), candidates.end(), [](auto& t1, auto& t2){ return std::get<1>(t1).d2 < std::get<1>(t2).d2; });
+            //        if (candidates.size() != 1){
+            //            throw std::invalid_argument("Incorrect region count ("+std::to_string(candidates.size())+") for inputs: "+std::to_string(val1) + "," + std::to_string(val2));
+            //        }
+        }
         auto stop_cand = high_resolution_clock::now();
         auto candidate_duration_us = duration_cast<nanoseconds>(stop_cand - start_outer).count()/1000.0;
         
-        for (auto& [thermregion, Tinit, rhoinit, d2] : candidates){
-            
-            // Make the iterator
-            auto iter = teqp::iteration::NRIterator(alphamodel, properties::get_vars(pair), (EArray2() << val1, val2).finished(), Tinit, rhoinit, mole_fractions, get_relative_errors(pair), stopping_conditions);
-            iter.verbose = false;
+        for (auto& [thermregion, cand] : candidates){
             
             // Do the Newton iteration (and time it individually)
             auto start = high_resolution_clock::now();
+            // Make the iterator (this copies quite a few things into the iterator)
+            auto iter = teqp::iteration::NRIterator(alphamodel, get_vars(pair), (EArray2() << val1, val2).finished(), cand.T, cand.rho, mole_fractions, get_relative_errors(pair), stopping_conditions);
+            iter.verbose = false;
             auto reason = iter.take_steps(20);
-            auto maxabsr = iter.calc_maxabsr(iter.get_T(), iter.get_rho());
             auto stop = high_resolution_clock::now();
             auto newton_duration_us = duration_cast<nanoseconds>(stop - start).count()/1000.0;
             
@@ -616,7 +645,7 @@ public:
             }
             else if (path_integration_steps > 0){
                 // Try to approach the solution with a few steps of path integration
-                auto [T, rho, newx, newy] = iter.path_integration(Tinit, rhoinit, path_integration_steps);
+                auto [T, rho, newx, newy] = iter.path_integration(cand.T, cand.rho, path_integration_steps);
                 
                 // Do the Newton iteration (again)
                 iter.reset(T, rho);
