@@ -340,16 +340,16 @@ NB_MODULE(_teqpflsh_impl, m) {
     
     nb::class_<RegionedFlasher>(m, "RegionedFlasher")
      .def(nb::init<const std::string&, const std::string&, const ArrayType&>(), nb::kw_only(), "ideal_gas"_a, "resid"_a, "mole_fractions"_a)
-     .def("add_region", &RegionedFlasher::add_region, "T"_a, "rho"_a, "NT"_a, "Nrho"_a, "Add a region to the set of regions")
+     .def("add_region", &RegionedFlasher::add_region, nb::kw_only(), "T"_a, "rho"_a, "NT"_a, "Nrho"_a, "Add a region to the set of regions")
      .def("remove_all_regions", &RegionedFlasher::remove_all_regions, "Remove all the regions to restore object to its initial state")
      .def("get_regions_ro", &RegionedFlasher::get_regions_ro, nb::rv_policy::reference, "Get a read-only view of the regions")
      .def("get_regions_rw", &RegionedFlasher::get_regions_rw, nb::rv_policy::reference, "Get read-write access to the regions")
      .def("get_quadtree_intersections", &RegionedFlasher::get_quadtree_intersections, nb::rv_policy::reference)
      .def("get_NRIterator", &RegionedFlasher::get_NRIterator, "Construct a Newton iterator object")
-     .def("get_starting_Trho", &RegionedFlasher::get_starting_Trho, nb::rv_policy::reference, "Get the starting temperture, density pair from the K-D tree")
+     .def("get_starting_Trho", &RegionedFlasher::get_starting_Trho, nb::rv_policy::reference, "Get the starting temperature, density pair from the K-D tree")
      
-     .def("flash", &RegionedFlasher::flash, "Do a flash calculation")
-     .def("flash_many", &RegionedFlasher::flash_many<tensor1d>, "Do many flash calculations, for testing in Python")
+     .def("flash", &RegionedFlasher::flash, "proppair"_a, "val1"_a, "val2"_a, "Do a flash calculation")
+     .def("flash_many", &RegionedFlasher::flash_many<tensor1d>, "proppair"_a, "val1"_a, "val2"_a, "T"_a, "rho"_a, "steps"_a, "maxabs"_a, "newtontime"_a, "candtime"_a, "Do many flash calculations, for testing in Python")
     ;
     
     using ce = teqpflsh::superancillary::ChebyshevExpansion<ArrayType>;
@@ -448,7 +448,7 @@ NB_MODULE(_teqpflsh_impl, m) {
     using mf = teqpflsh::MainFlasher;
     nb::class_<mf>(m, "MainFlasher")
         .def(nb::init<RegionedFlasher&&, const std::optional<sa>&, const std::shared_ptr<HelmholtzInterface>>(), nb::kw_only(), "regions"_a, "superancillary"_a, "helm"_a)
-      .def("flash", &mf::flash)
+      .def("flash", &mf::flash, "proppair"_a, "val1"_a, "val2"_a)
       .def("flash_many", &mf::flash_many<tensor1d>, "proppair"_a, "val1"_a, "val2"_a, "T"_a, "rho"_a, "q"_a)
       .def_prop_ro("regioned_flasher", &mf::get_regioned_flasher, nb::rv_policy::reference)
     ;
