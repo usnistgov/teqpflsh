@@ -36,6 +36,7 @@ if not on_actions:
 
 ### -- Auto-generate API documentation -----------------------------------------
 subprocess.check_output(f'sphinx-apidoc --private -f -o api {os.path.dirname(teqpflsh.__file__)}', shell=True, cwd=here)
+subprocess.check_output(f'python autodoc.py', shell=True, cwd=here)
 
 # -- General configuration ---------------------------------------------------
 
@@ -59,7 +60,7 @@ templates_path = ['_templates']
 exclude_patterns = []
 
 doxylink = {
-    'teqp' : (os.path.abspath(here+'/_static/doxygen/html/teqp.tag'), '_static/doxygen/html'),
+    'teqpflsh' : (os.path.abspath(here+'/_static/doxygen/html/teqp.tag'), '_static/doxygen/html'),
 }
 
 # -- Options for HTML output -------------------------------------------------
