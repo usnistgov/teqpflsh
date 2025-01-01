@@ -10,7 +10,7 @@ Welcome to teqpflsh's documentation!
    polygons/index
    KDtree/index
    regionedflasher/RegionedFlasher
-
+   regionedflasher/MainFlasher
    api/modules
 
 Indices and tables
