@@ -310,29 +310,29 @@ NB_MODULE(_teqpflsh_impl, m) {
     ;
     
     nb::class_<RegionedFlashReturn>(m, "RegionedFlashReturn")
-        .def_ro("T", &RegionedFlashReturn::T)
-        .def_ro("rho", &RegionedFlashReturn::rho)
-        .def_ro("reason", &RegionedFlashReturn::reason)
-        .def_ro("step_count", &RegionedFlashReturn::step_count)
-        .def_ro("maxabsr", &RegionedFlashReturn::maxabsr)
-        .def_ro("msg", &RegionedFlashReturn::msg)
-        .def_ro("newton_duration_us", &RegionedFlashReturn::newton_duration_us)
-        .def_ro("total_duration_us", &RegionedFlashReturn::total_duration_us)
-        .def_ro("candidate_duration_us", &RegionedFlashReturn::candidate_duration_us)
+        .def_ro("T", &RegionedFlashReturn::T, "Temperature, K")
+        .def_ro("rho", &RegionedFlashReturn::rho, "Molar density, mol/m3")
+        .def_ro("reason", &RegionedFlashReturn::reason, "Enumerated value for stopping reason")
+        .def_ro("step_count", &RegionedFlashReturn::step_count, "How many Newton steps were takenm")
+        .def_ro("maxabsr", &RegionedFlashReturn::maxabsr, "Maximum absolute residual")
+        .def_ro("msg", &RegionedFlashReturn::msg, "Message associated with stoppping reason")
+        .def_ro("newton_duration_us", &RegionedFlashReturn::newton_duration_us, "How long the Newton part took, in microseconds")
+        .def_ro("total_duration_us", &RegionedFlashReturn::total_duration_us, "How long the total calculation took, in microseconds")
+        .def_ro("candidate_duration_us", &RegionedFlashReturn::candidate_duration_us, "How long the candidate determination part took, in microseconds")
         ;
     
     nb::class_<RegionedFlasher>(m, "RegionedFlasher")
      .def(nb::init<const std::string&, const std::string&, const ArrayType&>(), nb::kw_only(), "ideal_gas"_a, "resid"_a, "mole_fractions"_a)
-     .def("add_region", &RegionedFlasher::add_region, "T"_a, "rho"_a, "NT"_a, "Nrho"_a)
-     .def("remove_all_regions", &RegionedFlasher::remove_all_regions)
-     .def("get_regions_ro", &RegionedFlasher::get_regions_ro, nb::rv_policy::reference)
-     .def("get_regions_rw", &RegionedFlasher::get_regions_rw, nb::rv_policy::reference)
+     .def("add_region", &RegionedFlasher::add_region, "T"_a, "rho"_a, "NT"_a, "Nrho"_a, "Add a region to the set of regions")
+     .def("remove_all_regions", &RegionedFlasher::remove_all_regions, "Remove all the regions to restore object to its initial state")
+     .def("get_regions_ro", &RegionedFlasher::get_regions_ro, nb::rv_policy::reference, "Get a read-only view of the regions")
+     .def("get_regions_rw", &RegionedFlasher::get_regions_rw, nb::rv_policy::reference, "Get read-write access to the regions")
      .def("get_quadtree_intersections", &RegionedFlasher::get_quadtree_intersections, nb::rv_policy::reference)
-     .def("get_NRIterator", &RegionedFlasher::get_NRIterator)
-     .def("get_starting_Trho", &RegionedFlasher::get_starting_Trho, nb::rv_policy::reference)
+     .def("get_NRIterator", &RegionedFlasher::get_NRIterator, "Construct a Newton iterator object")
+     .def("get_starting_Trho", &RegionedFlasher::get_starting_Trho, nb::rv_policy::reference, "Get the starting temperture, density pair from the K-D tree")
      
-     .def("flash", &RegionedFlasher::flash)
-     .def("flash_many", &RegionedFlasher::flash_many<tensor1d>)
+     .def("flash", &RegionedFlasher::flash, "Do a flash calculation")
+     .def("flash_many", &RegionedFlasher::flash_many<tensor1d>, "Do many flash calculations, for testing in Python")
     ;
     
     using ce = teqpflsh::superancillary::ChebyshevExpansion<ArrayType>;
