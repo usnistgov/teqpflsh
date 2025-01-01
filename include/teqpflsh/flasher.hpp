@@ -773,6 +773,12 @@ public:
         if (std::set<std::size_t>({val1.size(), val2.size(), T.size(), rho.size(), q.size()}).size() != 1){
             throw std::invalid_argument("val1, val2, T, rho, q are not all the same size");
         }
+        for (auto &reg : regioned_flasher.get_regions_ro()){
+            if (!reg.has_pair(proppair)){
+                throw std::invalid_argument("The desired pair is not available in at least one region");
+            }
+        }
+        
         for (auto i = 0; i < val1.size(); ++i){
             try{
                 auto optsoln = flash(proppair, val1(i), val2(i));
