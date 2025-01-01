@@ -85,6 +85,14 @@ NB_MODULE(_teqpflsh_impl, m) {
         .def(nb::init<>())
         .def("createPolygon", &GeometryFactoryHolder::createPolygon)
         .def("createPoint", &GeometryFactoryHolder::createPoint)
+        .def("makeclosedpolygon", [](GeometryFactoryHolder *holder, const tensor1d& x, const tensor1d& y){
+            auto seq = CoordinateSequence();
+            for (auto i = 0; i < x.size(); ++i){
+                seq.add(x(i), y(i));
+            }
+            seq.closeRing(true);
+            return holder->createPolygon(std::move(seq));
+        }, "x"_a, "y"_a, "A convenience function to make a closed polygon given numpy arrays")
     ;
     
     nb::class_<GeometryFactory>(m, "GeometryFactory")
@@ -114,6 +122,15 @@ NB_MODULE(_teqpflsh_impl, m) {
         .def("fastTriangulate", [](const Geometry* geo){ return geos::triangulate::polygon::PolygonTriangulator::triangulate(geo); })
     
         .def("getNumPoints", &Geometry::getNumPoints)
+        .def("getXY", [](const Geometry* self){
+            auto coords = self->getCoordinates();
+            Eigen::ArrayXd X(coords->size()), Y(coords->size());
+            for (auto j = 0; j < coords->size(); ++j){
+                X(j) = coords->getX(j);
+                Y(j) = coords->getY(j);
+            }
+            return std::make_tuple(X, Y);
+        }, "Convenience function to return the X, Y coordinates as numpy arrays in Python")
         .def("containsPoint", [](const Geometry* self, const std::unique_ptr<Point>& pt){ return self->contains(pt.get()); })
         .def("getCoordinates", &Geometry::getCoordinates)
         .def_prop_ro("isValid", &Geometry::isValid)
