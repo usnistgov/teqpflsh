@@ -11,6 +11,7 @@ Welcome to teqpflsh's documentation!
    KDtree/index
    regionedflasher/RegionedFlasher
    regionedflasher/MainFlasher
+   background/Outlook
    api/modules
 
 Indices and tables
