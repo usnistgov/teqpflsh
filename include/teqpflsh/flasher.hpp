@@ -429,7 +429,7 @@ public:
         const auto& kd = kdtrees.at(pair);
         auto [idx, d2] = kd->get_nearest_indexd2(val1, val2);
         auto [T, rho] = propset_Trhogrid.get_Trho(idx);
-        return TrhoLookup(T, rho, d2);
+        return TrhoLookup{T, rho, d2};
 //
 //        const auto& tr = transformed_regions.at(pair);
 //        // First check whether even in envelope (bounding box) of the transformed polygon
