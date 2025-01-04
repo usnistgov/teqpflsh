@@ -16,6 +16,8 @@ jobs:
         uses: actions/checkout@v4
       - name: checkout submodules
         run: git submodule update --init --recursive
+      - name: fix pip
+        run: python -m ensurepip --upgrade
       - uses: conda-incubator/setup-miniconda@v3
         with:
           # mamba-version: "*"
