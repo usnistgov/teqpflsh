@@ -22,8 +22,10 @@ set(BUILD_SHARED_LIBS FALSE CACHE BOOL "Everything else is statically linked")
     
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/externals/nanobind)
 
+if (SKBUILD AND APPLE)
 set(CMAKE_INSTALL_RPATH "@loader_path")
 set(INSTALL_RPATH "@loader_path")
+endif()
 
 set(NAME teqpflsh)
 
