@@ -21,10 +21,10 @@ jobs:
       - uses: conda-incubator/setup-miniconda@v3
         with:
           # mamba-version: "*"
-          channels: conda-forge
-          use-only-tar-bz2: true  # IMPORTANT: This needs to be set for caching to work properly!
-          auto-update-conda: true
-          conda-remove-defaults: true
+          # channels: conda-forge
+          # use-only-tar-bz2: true  # IMPORTANT: This needs to be set for caching to work properly!
+          # auto-update-conda: true
+          # conda-remove-defaults: true
           activate-environment: teqpflshdocs
           environment-file: doc/environment.yml
       - name: install teqpflsh, built from source
