@@ -73,7 +73,7 @@ struct ViewAdapter
             if ( this->x->size()!= this->y->size()){ throw std::invalid_argument("x and y arguments are not the same size"); }
         };
     std::size_t get_used_bytes() const{
-        return 2*x->size()*sizeof(decltype(x[0])) + 2*8;
+        return 2*x->size()*sizeof(decltype(x->front())) + 2*8;
     }
     
     ViewAdapter (const ViewAdapter&) = default;
