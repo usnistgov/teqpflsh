@@ -9,16 +9,19 @@ set(BUILD_SHARED_LIBS FALSE CACHE BOOL "Use shared libraries for GEOS, due to th
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/externals/geos EXCLUDE_FROM_ALL)
 set(BUILD_SHARED_LIBS FALSE  CACHE BOOL "Everything else is statically linked")
 MESSAGE(STATUS "Fix dynamic loading of GEOS; static linking seems like the only feasible option currently")
+set_target_properties(geos PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
     
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/externals/nanobind)
 
 set(TEQP_NO_TESTS TRUE CACHE BOOL "No test targets for teqp (quite slow to compile)")
 set(TEQP_NO_PYTHON TRUE CACHE BOOL "No pybind11 targets for teqp (quite slow to compile)")
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/externals/teqp)
+set_target_properties(teqpcpp PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
 
 set(NANOFLANN_BUILD_EXAMPLES FALSE CACHE BOOL "No nanoflann examples")
 set(NANOFLANN_BUILD_TESTS FALSE CACHE BOOL "No nanoflann tests")
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/externals/nanoflann)
+set_target_properties(nanoflann PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
 
 set(NAME teqpflsh)
 
