@@ -11,9 +11,9 @@ requires-python = ">=3.8"
 authors = [
     { name = "Your Name", email = "your.email@address.com" },
 ]
-classifiers = [
-    "License :: BSD",
-]
+# classifiers = [
+#     "License :: BSD",
+# ]
 
 [project.urls]
 Homepage = "https://github.com/your/project"

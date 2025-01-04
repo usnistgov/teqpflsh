@@ -66,7 +66,7 @@ constexpr std::pair<char, char> get_property_chars(const PropertyPairs pair){
         case PropertyPairs::HS: return {'H','S'};
     }
 }
-constexpr std::vector<char> get_vars(const PropertyPairs pair){
+std::vector<char> get_vars(const PropertyPairs pair){
     auto chars = get_property_chars(pair);
     return {std::get<0>(chars), std::get<1>(chars)};
 }
