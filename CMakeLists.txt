@@ -5,8 +5,6 @@ find_package(Python 3.8 COMPONENTS Interpreter Development.Module REQUIRED)
 
 set(CMAKE_CXX_STANDARD 20)
 
-set(TEQP_NO_TESTS TRUE CACHE BOOL "No test targets for teqp (quite slow to compile)")
-set(TEQP_NO_PYTHON TRUE CACHE BOOL "No pybind11 targets for teqp (quite slow to compile)")
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/externals/teqp)
 set_target_properties(teqpcpp PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
 
