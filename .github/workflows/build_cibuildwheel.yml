@@ -16,7 +16,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macOS-13, macos-14]
+        os: [ubuntu-latest, macOS-13, macos-14] # windows-latest, note: no windows until this is merged: https://github.com/libgeos/geos/pull/1221
 
     steps:
       - uses: actions/checkout@v4
