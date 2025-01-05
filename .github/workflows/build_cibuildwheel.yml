@@ -37,7 +37,7 @@ jobs:
 
       - name: Build sdist
         run: pipx run build --sdist --outdir wheelhouse
-        if: runner.os == 'Ubuntu'
+        if: runner.os == 'Linux'
 
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
