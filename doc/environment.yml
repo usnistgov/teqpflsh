@@ -27,4 +27,4 @@ dependencies:
     - insipid-sphinx-theme
     - CoolProp
     - ChebTools
-    
+    - teqpflsh
