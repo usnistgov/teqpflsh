@@ -30,14 +30,14 @@ endif()
 
 set(NAME teqpflsh)
 
-# PYTHON STUFF
+# Define the python module
 nanobind_add_module(_${NAME}_impl ${CMAKE_CURRENT_SOURCE_DIR}/interface/nanobind_interface.cpp)
 target_include_directories(_${NAME}_impl PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_include_directories(_${NAME}_impl PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/externals/teqp/externals/Eigen)
 target_link_libraries(_${NAME}_impl PUBLIC geos PUBLIC teqpcpp PRIVATE nanoflann)
 
 # Install geos in a location that the stubgen in the next step will resolve
-# on all OS
+# on all OS. It will ultimately get installed alongside the python extension
 set_target_properties( geos
     PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY "$<TARGET_FILE_DIR:_${NAME}_impl>"
