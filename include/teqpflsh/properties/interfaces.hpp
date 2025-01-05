@@ -19,7 +19,7 @@ public:
 
 class teqpHelmholtzInterface : public HelmholtzInterface{
 public:
-    std::unique_ptr<AbstractModel> model_residual, model_ideal_gas;
+    std::unique_ptr<AbstractModel> model_ideal_gas, model_residual;
     
     teqpHelmholtzInterface(const std::string &ideal_gas, const std::string &resid)
         : model_ideal_gas(make_model(nlohmann::json::parse(ideal_gas))),
