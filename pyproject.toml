@@ -36,3 +36,8 @@ logging.level = "INFO"
 #cmake.args = ["-G Xcode", "-DXCODE_DEBUG_PYTHON=ON"]
 #cmake.args = ["-DVERBOSE=ON"]
 
+[tool.scikit-build.overrides."windows"]
+cmake.args = [
+    "-T",
+    "ClangCL"
+]
