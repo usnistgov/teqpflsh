@@ -71,6 +71,7 @@ endif()
 # Install directive for scikit-build-core
 install(TARGETS _${NAME}_impl LIBRARY DESTINATION ${NAME})
 install(TARGETS geos LIBRARY DESTINATION ${NAME})
+install(FILES "$<TARGET_FILE:geos>" DESTINATION ${NAME}) # backup install method
 
 # Alter the output location for editable builds so that GEOS 
 # is loaded properly
