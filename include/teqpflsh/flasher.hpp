@@ -14,7 +14,7 @@
 
 #include "geos/triangulate/polygon/ConstrainedDelaunayTriangulator.h"
 #include "geos/triangulate/polygon/PolygonTriangulator.h"
-#include "geos/geom/prep/PreparedPolygon.h"
+#include "geos/geom/prep/PreparedGeometryFactory.h"
 #include "geos/operation/valid/MakeValid.h"
 #include "geos/operation/valid/IsSimpleOp.h"
 
@@ -65,20 +65,20 @@ private:
     std::unique_ptr<Geometry> m_bounding_polygon;
     const Envelope envelope;
     PolyQuadTree quadtree;
-    geos::geom::prep::PreparedPolygon preppoly; // The prepared polygon, which is likely a quadtree or something like that
+    std::unique_ptr<geos::geom::prep::PreparedGeometry> m_preppoly;
     
 private:
-    QuadRegion2D(std::unique_ptr<Geometry>&& bounding_polygon) : m_bounding_polygon(std::move(bounding_polygon)), envelope(build_envelope(m_bounding_polygon)), quadtree(m_bounding_polygon->getCoordinates()), preppoly(m_bounding_polygon.get())
-     
+    QuadRegion2D(std::unique_ptr<Geometry>&& bounding_polygon) : m_bounding_polygon(std::move(bounding_polygon)), envelope(build_envelope(m_bounding_polygon)), quadtree(m_bounding_polygon->getCoordinates()), m_preppoly(geos::geom::prep::PreparedGeometryFactory().create(m_bounding_polygon.get()))
     {}
 public:
     
     /// Public constructor taking the x and y coordinates of the geometry
-    QuadRegion2D(const std::vector<double>&x, const std::vector<double>& y) : factory(GeometryFactory::create()), m_bounding_polygon(create_base_polygon(x, y)), envelope(build_envelope(m_bounding_polygon)), quadtree(m_bounding_polygon->getCoordinates()), preppoly(m_bounding_polygon.get()) {
+    QuadRegion2D(const std::vector<double>&x, const std::vector<double>& y) : factory(GeometryFactory::create()), m_bounding_polygon(create_base_polygon(x, y)), envelope(build_envelope(m_bounding_polygon)), quadtree(m_bounding_polygon->getCoordinates()), m_preppoly(geos::geom::prep::PreparedGeometryFactory().create(m_bounding_polygon.get()))
+    {
         // TODO: see IsSimpleOp to identify issues in polygon at construction time
     }
     /// Public constructor taking the x and y coordinates of the geometry as Eigen::Array
-    QuadRegion2D(const Eigen::ArrayXd&x, const Eigen::ArrayXd& y) : factory(GeometryFactory::create()), m_bounding_polygon(create_base_polygon(x, y)), envelope(build_envelope(m_bounding_polygon)), quadtree(m_bounding_polygon->getCoordinates()), preppoly(m_bounding_polygon.get()) {
+    QuadRegion2D(const Eigen::ArrayXd&x, const Eigen::ArrayXd& y) : factory(GeometryFactory::create()), m_bounding_polygon(create_base_polygon(x, y)), envelope(build_envelope(m_bounding_polygon)), quadtree(m_bounding_polygon->getCoordinates()), m_preppoly(geos::geom::prep::PreparedGeometryFactory().create(m_bounding_polygon.get())) {
     }
     QuadRegion2D(const QuadRegion2D&) = delete;
     auto get_envelope() const {
@@ -90,11 +90,11 @@ public:
     }
     bool contains(double x, double y) const {
         auto pt = factory->createPoint(CoordinateXY{x, y});
-        return preppoly.contains(pt.get());
+        return m_preppoly->contains(pt.get());
     }
     bool distance(double x, double y) const {
         auto pt = factory->createPoint(CoordinateXY{x, y});
-        return preppoly.distance(pt.get());
+        return m_preppoly->distance(pt.get());
     }
         
     auto get_coords_xy(){
@@ -218,13 +218,11 @@ public:
         
         if (bufx.size() != bufy.size()){ throw std::invalid_argument("Output buffers must be the same size"); }
         
-        geos::geom::prep::PreparedPolygon prep(m_bounding_polygon.get());
-        
         std::size_t index = 0;
         for (auto i = 0U; i < gridx.size(); ++i){
             for (auto j = 0U; j < gridy.size(); ++j){
                 auto pt = factory->createPoint(CoordinateXY{gridx(i), gridy(j)});
-                if (prep.contains(pt.get())){
+                if (m_preppoly->contains(pt.get())){
                     bufx(index) = gridx(i);
                     bufy(index) = gridy(j);
                     index++;
@@ -270,8 +268,7 @@ public:
                 else{
                     // We need to use the polygon of the intersection node to determine what to do
                     auto pt = factory->createPoint(CoordinateXY{gridx(i), gridy(j)});
-                    geos::geom::prep::PreparedPolygon prep(node.get_contents().poly.get());
-                    if (prep.contains(pt.get())){
+                    if (m_preppoly->contains(pt.get())){
                         bufx(index) = gridx(i);
                         bufy(index) = gridy(j);
                         index++;
