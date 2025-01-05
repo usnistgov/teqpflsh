@@ -7,16 +7,16 @@ name = "teqpflsh"
 version = "0.0.0"
 description = "Flash calculations with guesses powered by K-D trees"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.12"
 authors = [
-    { name = "Your Name", email = "your.email@address.com" },
+    { name = "Ian Bell", email = "ian.bell@nist.gov" },
 ]
 # classifiers = [
 #     "License :: BSD",
 # ]
 
 [project.urls]
-Homepage = "https://github.com/your/project"
+Homepage = "https://github.com/usnistgov/teqpflsh"
 
 [tool.scikit-build]
 # Protect the configuration against future changes in scikit-build-core
