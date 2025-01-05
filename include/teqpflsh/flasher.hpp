@@ -74,11 +74,11 @@ private:
 public:
     
     /// Public constructor taking the x and y coordinates of the geometry
-    QuadRegion2D(const std::vector<double>&x, const std::vector<double>& y) : factory(GeometryFactory::create()), m_bounding_polygon(std::move(create_base_polygon(x, y))), envelope(build_envelope(m_bounding_polygon)), quadtree(m_bounding_polygon->getCoordinates()), preppoly(m_bounding_polygon.get()) {
+    QuadRegion2D(const std::vector<double>&x, const std::vector<double>& y) : factory(GeometryFactory::create()), m_bounding_polygon(create_base_polygon(x, y)), envelope(build_envelope(m_bounding_polygon)), quadtree(m_bounding_polygon->getCoordinates()), preppoly(m_bounding_polygon.get()) {
         // TODO: see IsSimpleOp to identify issues in polygon at construction time
     }
     /// Public constructor taking the x and y coordinates of the geometry as Eigen::Array
-    QuadRegion2D(const Eigen::ArrayXd&x, const Eigen::ArrayXd& y) : factory(GeometryFactory::create()), m_bounding_polygon(std::move(create_base_polygon(x, y))), envelope(build_envelope(m_bounding_polygon)), quadtree(m_bounding_polygon->getCoordinates()), preppoly(m_bounding_polygon.get()) {
+    QuadRegion2D(const Eigen::ArrayXd&x, const Eigen::ArrayXd& y) : factory(GeometryFactory::create()), m_bounding_polygon(create_base_polygon(x, y)), envelope(build_envelope(m_bounding_polygon)), quadtree(m_bounding_polygon->getCoordinates()), preppoly(m_bounding_polygon.get()) {
     }
     QuadRegion2D(const QuadRegion2D&) = delete;
     auto get_envelope() const {
