@@ -37,6 +37,15 @@ target_include_directories(_${NAME}_impl PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/incl
 target_include_directories(_${NAME}_impl PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/externals/teqp/externals/Eigen)
 target_link_libraries(_${NAME}_impl PUBLIC geos PUBLIC teqpcpp PRIVATE nanoflann)
 
+# Install geos in a location that the stubgen in the next step will resolve
+# on all OS
+set_target_properties( geos
+    PROPERTIES
+    ARCHIVE_OUTPUT_DIRECTORY "$<TARGET_FILE_DIR:_${NAME}_impl>"
+    LIBRARY_OUTPUT_DIRECTORY "$<TARGET_FILE_DIR:_${NAME}_impl>"
+    RUNTIME_OUTPUT_DIRECTORY "$<TARGET_FILE_DIR:_${NAME}_impl>"
+)
+
 nanobind_add_stub(
   _${NAME}_impl_stub
   MODULE _${NAME}_impl
