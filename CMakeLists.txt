@@ -16,7 +16,6 @@ set_target_properties(nanoflann PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
 set(BUILD_SHARED_LIBS TRUE CACHE BOOL "Use shared libraries for GEOS, due to the LGPL v2.1 license")
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/externals/geos EXCLUDE_FROM_ALL)
 set(BUILD_SHARED_LIBS FALSE CACHE BOOL "Everything else is statically linked")
-# MESSAGE(STATUS "Fix dynamic loading of GEOS; static linking seems like the only feasible option currently")
     
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/externals/nanobind)
 
