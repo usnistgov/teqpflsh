@@ -320,7 +320,7 @@ NB_MODULE(_teqpflsh_impl, m) {
         .def("calc_maxabsr", &nri::calc_maxabsr)
         .def("get_maxabsr", &nri::get_maxabsr)
         
-        .def("take_steps", &nri::take_steps, "N"_a)
+        .def("take_steps", &nri::take_steps, "N"_a, "apply_stopping"_a)
         .def("path_integration", &nri::path_integration)
      
        .def("get_step_count", &nri::get_step_count)
