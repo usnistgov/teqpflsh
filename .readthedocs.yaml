@@ -8,7 +8,7 @@ version: 2
 build:
   os: "ubuntu-24.04"
   tools:
-    python: "mambaforge-latest"
+    python: "miniforge3-24.11.0-1"
 
 conda:
   environment: doc/environment.yml
