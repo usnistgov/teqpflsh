@@ -2,6 +2,7 @@
 name: teqpflshdocs
 channels:
   - conda-forge
+  - nodefaults
 dependencies:
   - python=3.12
   - pip
