@@ -1,4 +1,4 @@
-import subprocess, os, shutil, re
+import subprocess, os, shutil, re, timeit
 
 here = os.path.dirname(__file__)
 import teqpflsh
@@ -24,7 +24,10 @@ def run():
     for path, dirs, files in os.walk('.'):
         for file in files:
             if file.endswith('.ipynb') and '.ipynb_checkpoints' not in path:
+                tic = timeit.default_timer()
                 subprocess.check_output(f'jupyter nbconvert --allow-errors --to notebook --output "{file}" --execute "{file}"', shell=True, cwd=path)
+                toc = timeit.default_timer()
+                print(f'Elapsed for conversion: {toc-tic} seconds')
 
 if __name__ == '__main__':
     print('running sphinx_pre_run.py...')
