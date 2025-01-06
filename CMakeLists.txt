@@ -131,7 +131,7 @@ option (TEQPFLSH_TESTS
         "Enable to include the test targets"
         OFF)
 
-if (TEQPFLSH_TESTS)
+if (PROJECT_IS_TOP_LEVEL AND TEQPFLSH_TESTS)
   add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/externals/Catch2")
   file(GLOB catch_tests_files "${CMAKE_CURRENT_SOURCE_DIR}/src/tests/*.cxx")
   message("${catch_tests_files}")
