@@ -19,9 +19,6 @@
 
 #define BOOST_MATH
 
-#include "teqpflsh/polymath.hpp"
-#include "teqpflsh/polygon.hpp"
-#include "teqpflsh/stepping.hpp"
 #include "teqpflsh/polyquadtree.hpp"
 #include "teqpflsh/flasher.hpp"
 #include "teqpflsh/superancillary/superancillary.hpp"
@@ -36,14 +33,6 @@ using ArrayType = teqpflsh::ArrayType;
 using tensor1d = nb::ndarray<double, nb::shape<-1>, nb::c_contig, nb::device::cpu>;
 using tensor1i = nb::ndarray<int, nb::shape<-1>, nb::c_contig, nb::device::cpu>;
 using tensor33d = nb::ndarray<double, nb::shape<3,3>, nb::c_contig, nb::device::cpu>;
-
-auto build_rJ_wrap(const tensor33d ALPHA, double T, double rho, double R, char x_key, double x_val, char y_key, double y_val){
-    return build_rJ(ALPHA.view(), T, rho, R, x_key, x_val, y_key, y_val);
-}
-
-bool pnpoly_wrap(const tensor1d vertx, const tensor1d verty, double testx, double testy){
-    return pnpoly(vertx.size(), vertx.data(), verty.data(), testx, testy);
-}
 
 int add(int a, int b) { return a + b; }
 double _indexer(const tensor1d x, std::size_t i){
@@ -64,8 +53,6 @@ NB_MODULE(_teqpflsh_impl, m) {
     m.def("add", &add);
     m.def("indexer", &_indexer);
     m.def("indexer33", &_indexer33);
-    m.def("pnpoly", &pnpoly_wrap, "vertx"_a.noconvert(), "verty"_a.noconvert(), "testx"_a, "testy"_a );
-    m.def("build_rJ", &build_rJ_wrap);//, "ALPHA"_a.noconvert(), "T"_a, "rho"_a, "R"_a, "x_key"_a, "x_val"_a, "y_key"_a, "y_val"_a );
     
     
     //  *****************************************************************************
@@ -157,8 +144,6 @@ NB_MODULE(_teqpflsh_impl, m) {
         .def("make_valid", [](const Geometry* self){
             return geos::operation::valid::MakeValid().build(self);
         })
-    
-    
     ;
     
     nb::class_<Point, Geometry>(m, "Point")
