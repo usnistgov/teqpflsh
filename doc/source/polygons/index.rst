@@ -6,3 +6,4 @@ Polygons and Regions
    :caption: Contents:
 
    polygonoperations
+   polygonvalidity

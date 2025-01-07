@@ -13,6 +13,7 @@
 #include <nanobind/eigen/dense.h>
 
 #include "geos/geom/prep/PreparedGeometryFactory.h"
+#include "geos/operation/valid/MakeValid.h"
 
 #define BOOST_MATH
 
@@ -142,6 +143,11 @@ NB_MODULE(_teqpflsh_impl, m) {
             return geos::geom::prep::PreparedGeometryFactory::prepare(self);
         })
         .def("getCentroid",  [](Geometry* t) { return t->getCentroid(); })
+        .def("make_valid", [](const Geometry* self){
+            return geos::operation::valid::MakeValid().build(self);
+        })
+    
+    
     ;
     
     nb::class_<Point, Geometry>(m, "Point")
