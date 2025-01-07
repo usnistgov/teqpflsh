@@ -25,7 +25,6 @@
 #include "teqpflsh/polyquadtree.hpp"
 #include "teqpflsh/flasher.hpp"
 #include "teqpflsh/superancillary/superancillary.hpp"
-#include "nanobind_json.hpp"
 
 namespace nb = nanobind;
 using namespace nb::literals;
@@ -484,11 +483,7 @@ NB_MODULE(_teqpflsh_impl, m) {
     m.def("get_property_chars", &get_property_chars);
     m.def("get_pair_log_scaling", &get_pair_log_scaling);
     
-    auto dumps = [](const nlohmann::json& j) -> std::string{
-        return j.dump(2);
-    };
-    m.def("dumps", dumps);
-    
+    // Exposed to make it easier to experiment with this function
     m.def("toms748_solve", [](const std::function<double(double)>& f, double a, double b, unsigned int bits, std::size_t max_iter){
         using namespace boost::math::tools;
         auto result = toms748_solve(f, a, b, eps_tolerance<double>(bits), max_iter);
