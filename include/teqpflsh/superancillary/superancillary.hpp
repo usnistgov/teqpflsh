@@ -189,16 +189,25 @@ auto dyadic_splitting(const std::size_t N, const Function& func, const double xm
 template<typename ArrayType>
 class ChebyshevExpansion{
 private:
-    double m_xmin, m_xmax;
-    ArrayType m_coeff;
+    double m_xmin, ///< The minimum value of the independent variable
+           m_xmax; ///< The maximum value of the independent variable
+    ArrayType m_coeff; ///< The coefficients of the expansion
 public:
+    /// Constructor with bounds and coefficients
     ChebyshevExpansion(double xmin, double xmax, const ArrayType& coeff) : m_xmin(xmin), m_xmax(xmax), m_coeff(coeff){};
     
+    /// Get the minimum value of the independent variable
     const auto xmin() const { return m_xmin; }
+    
+    /// Get the maximum value of the independent variable
     const auto xmax() const { return m_xmax; }
+    
+    /// Get a const view on the expansion coefficients
     const auto& coeff() const { return m_coeff; }
 
-    /// Evaluate the expansion with Clenshaw's method
+    /** Evaluate the expansion with Clenshaw's method
+     \param x The value of the independent variable
+     */
     template<typename T>
     auto eval(const T& x) const{
         // Scale to (-1, 1)
@@ -215,14 +224,14 @@ public:
         return retval;
     }
     
-    // A vectorized variant (for use with Python interface)
+    /// A vectorized variant (for use with Python interface)
     template<typename T>
     auto eval_many(const T& x, T& y) const{
         if (x.size() != y.size()){ throw std::invalid_argument("x and y are not the same size"); }
         for (auto i = 0; i < x.size(); ++i){ y(i) = eval(x(i)); }
     }
     
-    // A vectorized variant (for use with Python interface)
+    /// A vectorized variant (for use with Python interface)
     template<typename T>
     auto eval_Eigen(const T& x, T& y) const{
         if (x.size() != y.size()){ throw std::invalid_argument("x and y are not the same size"); }
@@ -246,7 +255,7 @@ public:
     \param b right bound for interval
     \param bits number of bits to be matched in TOMS748 solver
     \param max_iter maximum nimber of function calls
-    \params boundsytol tolerance that is considered to be the right solution
+    \param boundsytol tolerance that is considered to be the right solution
     \return Tuple of value of x and the number of function evaluations required
      */
     auto solve_for_x_count(double y, double a, double b, unsigned int bits, std::size_t max_iter, double boundsytol) const{
@@ -267,7 +276,7 @@ public:
         return std::get<0>(solve_for_x_count(y, a, b, bits, max_iter, boundsytol));
     }
     
-    // A vectorized variant (for use with Python interface)
+    /// A vectorized variant (for use with Python interface)
     template<typename T>
     auto solve_for_x_many(const T& y, double a, double b, unsigned int bits, std::size_t max_iter, double boundsytol, T& x, T& counts) const{
         if (x.size() != y.size()){ throw std::invalid_argument("x and y are not the same size"); }
@@ -311,35 +320,47 @@ public:
 /// Data associated with monotonic expansion
 struct MonotonicExpansionMatch{
     std::size_t idx; ///< The index of the expansion that has been matched
-    double ymin, ymax, xmin, xmax;
+    double ymin, ///< The minimum value of the dependent variable
+           ymax, ///< The maximum value of the dependent variable
+           xmin, ///< The minimum value of the independent variable
+           xmax; ///< The maximum value of the independent variable
+    /// Check if a value of the dependent variable is within this match
     bool contains_y (double y) const { return y >= ymin && y <= ymax; }
 };
 
 /// Data associated with a monotonic interval
 struct IntervalMatch{
-    std::vector<MonotonicExpansionMatch> expansioninfo;
-    double xmin, xmax, ymin, ymax;
+    std::vector<MonotonicExpansionMatch> expansioninfo; ///< The information about the expansions for this interval
+    double xmin, ///< The minimum value of the independent variable
+           xmax, ///< The maximum value of the independent variable
+           ymin, ///< The minimum value of the dependent variable
+           ymax; ///< The maximum value of the dependent variable
+    /// Check if a value of the dependent variable is within this interval
     bool contains_y (double y) const { return y >= ymin && y <= ymax; }
 };
 
-/** A set of multiple Chebyshev expansions covering a larger interval [xmin, xmax]; the
- 
- This is a 1D approximation
+/**
+ A set of multiple Chebyshev expansions covering an interval [xmin, xmax]. This is a 1D approximation.
+ Practically speaking the independent variable is temperature, but the code was left generic to highlight the generiticity
+ of the approach
  
  At construction, the independent variable is subdivided into portions
- that are each monotonic, to enable latter rootfinding
+ that are each monotonic in the dependent variable, to facilitate later rootfinding in domains that are therefore
+ known to be monotonic, and therefore invertible
 */
 template<typename ArrayType=Eigen::ArrayXd>
 struct ChebyshevApproximation1D{
 private:
     const double thresh_imag = 1e-15; ///< The threshold below which a complex number is considered to be imaginary
-    const std::vector<ChebyshevExpansion<ArrayType>> m_expansions;
-    const std::vector<double> m_x_at_extrema;
-    const std::vector<IntervalMatch> m_monotonic_intervals;
+    const std::vector<ChebyshevExpansion<ArrayType>> m_expansions; ///< The collection of expansions forming the approximation
+    const std::vector<double> m_x_at_extrema; ///< The values of the independent variable at the extrema of the expansions
+    const std::vector<IntervalMatch> m_monotonic_intervals; ///< The intervals that are monotonic
     
-    
-    /// Determine the values of x for the extrema where y'=0 according to the expansions
-    auto determine_extrema(const std::decay_t<decltype(m_expansions)>& expansions, double thresh_im) const{
+    /** Determine the values of x for the extrema where y'(x)=0 according to the expansions
+     \param expansions The set of expansions that are to be traversed to identify extrema
+     \param thresh_im The threshold on the imaginary part of an eigenvalue rootfinding solution to deem it to be "real enough"
+    */
+    std::vector<double> determine_extrema(const std::decay_t<decltype(m_expansions)>& expansions, double thresh_im) const{
         std::vector<double> x_at_extrema;
         Eigen::MatrixXd companion_matrix, cprime, D;
         for (auto& expan : expansions){
@@ -380,7 +401,12 @@ private:
         std::sort(x_at_extrema.begin(), x_at_extrema.end());
         return x_at_extrema;
     }
-    auto build_monotonic_intervals(const std::vector<double>& x_at_extrema) const{
+    
+    /** Build information about intervals in which the function to be approximated is monotonic (invertible)
+     \param x_at_extrema The values of x where extema exist inside the edges of the overall interval
+     \note The edges of the intervals are added to the front and end of the interval before the comparisons begin
+     */
+    std::vector<IntervalMatch> build_monotonic_intervals(const std::vector<double>& x_at_extrema) const{
         std::vector<IntervalMatch> intervals;
         
         auto sort = [](double& x, double &y){ if (x > y){ std::swap(x, y);} };
@@ -449,7 +475,10 @@ private:
     }
     
 public:
-    const double xmin, xmax;
+    const double xmin, ///< The minimum value of the independent variable
+                 xmax; ///< The maximum value of the independent variable
+    
+    // Move constructor given a vector of expansions
     ChebyshevApproximation1D(std::vector<ChebyshevExpansion<ArrayType>> && expansions) :
         m_expansions(std::move(expansions)),
         m_x_at_extrema(determine_extrema(m_expansions, thresh_imag)),
@@ -458,9 +487,13 @@ public:
         xmax(get_expansions().back().xmax())
     {}
     
-    /// Get a view on the expansions owned by the approximation instance
+    /// Get a const view on the expansions owned by the approximation instance
     const auto& get_expansions() const { return m_expansions; }
+    
+    /// Get a const view on values of x at the extrema
     const auto& get_x_at_extrema() const { return m_x_at_extrema; }
+    
+    /// Get a const view on the monotonic intervals identified
     const auto& get_monotonic_intervals() const { return m_monotonic_intervals; }
     
     /// Check whether the function is monotonic, if so some simplifications can be made to
@@ -469,7 +502,10 @@ public:
         return m_monotonic_intervals.size() == 1;
     }
     
-    /// Return the index of the expansion that is desired
+    /** Return the index of the expansion that is desired
+     * \param x value of x
+     * \returns The index of the expansion in the array of expansions that the point is within
+     */
     auto get_index(double x) const {
         
         // https://proquest.safaribooksonline.com/9780321637413
@@ -491,6 +527,10 @@ public:
         return (x < m_expansions[iL].xmax()) ? iL : iR;
     };
     
+    /** Evaluate the value from the expansion
+     \param x The value of the independent variable
+     \returns y The evaluation of y(x) from the expansion
+     */
     double eval(double x) const{
         return m_expansions[get_index(x)].eval(x);
     }
@@ -504,9 +544,8 @@ public:
         }
     }
     
-    
     /// Find the intervals containing the value of y
-    const auto get_intervals_containing_y(double y) const{
+    const std::vector<IntervalMatch> get_intervals_containing_y(double y) const{
         std::vector<IntervalMatch> matches;
         for (auto & interval : m_monotonic_intervals){
             if (y >= interval.ymin && y <= interval.ymax){
@@ -516,7 +555,8 @@ public:
         return matches;
     }
     
-    /// Solve for (possibly multiple) values of the independent variable x given a value of the dependent variable y
+    /** Solve for (possibly multiple) values of the independent variable x given a value of the dependent variable y
+     */
     const auto get_x_for_y(double y, unsigned int bits, std::size_t max_iter, double boundsftol) const {
         std::vector<std::tuple<double, int>> solns;
         for (const auto& interval: m_monotonic_intervals){
@@ -538,6 +578,7 @@ public:
         }
         return solns;
     }
+    
     /// A vectorized and templated getter (for calling from python)
     template<typename Container>
     const auto count_x_for_y_many(const Container& y, unsigned int bits, std::size_t max_iter, double boundsftol, Container& x) const {
@@ -549,19 +590,40 @@ public:
 };
 
 struct SuperAncillaryTwoPhaseSolution{
-    double T, q;
-    std::size_t counter;
+    double T, ///< The temperature, in K
+           q; ///< The vapor quality
+    std::size_t counter; ///< Counter for how many steps have been taken
 };
 
+/**
+ 
+A superancillary object is formed of a number of one dimensional Chebyshev approximations, one for each phase, property pair.
+ 
+ Loaded from the file are density and pressure as functions of temperature, and a thermodynamic model can be used to build
+ the
+ 
+ */
 template<typename ArrayType=Eigen::ArrayXd>
 class SuperAncillary{
 private:
     /// These ones must always be present
-    ChebyshevApproximation1D<ArrayType> m_rhoL, m_rhoV, m_p, m_invlnp;
+    ChebyshevApproximation1D<ArrayType> m_rhoL, ///< Approximation of \f$\rho'(T)\f$
+                                        m_rhoV, ///< Approximation of \f$\rho''(T)\f$
+                                        m_p, ///< Approximation of \f$p(T)\f$
+                                        m_invlnp;///< Approximation of \f$T(ln(p))\f$
     
     // These ones *may* be present
-    std::optional<ChebyshevApproximation1D<ArrayType>> m_hL, m_hV, m_sL, m_sV, m_uL, m_uV;
+    std::optional<ChebyshevApproximation1D<ArrayType>> m_hL, ///< Approximation of \f$h'(T)\f$
+                                        m_hV, ///< Approximation of \f$h''(T)\f$
+                                        m_sL, ///< Approximation of \f$s'(T)\f$
+                                        m_sV, ///< Approximation of \f$s''(T)\f$
+                                        m_uL, ///< Approximation of \f$u'(T)\f$
+                                        m_uV; ///< Approximation of \f$u''(T)\f$
 
+    /** A convenience function to load a ChebyshevExpansion from a JSON data structure
+     \param j The JSON data
+     \param key The key to be loaded from the superancillary block, probably one of "jexpansions_rhoL", "jexpansions_rhoV", or "jexpansions_p"
+     */
     auto loader(const nlohmann::json &j, const std::string& key){
         std::vector<ChebyshevExpansion<ArrayType>> buf;
         auto toeig = [](const nlohmann::json &j) -> Eigen::ArrayXd{
@@ -574,7 +636,9 @@ private:
         return buf;
     }
     
-    /// Make an inverse ChebyshevApproximation1D for T(p)
+    /** Make an inverse ChebyshevApproximation1D for T(p)
+     \param Ndegree The degree of the expansion in each interval. In double precision, 12 to 16 is a good plan if you will not be doing eigenvalue rootfinding. If you will be doing eigenvalue rootfinding, use a lower degree expansion, 8 is good.
+     */
     auto make_invlnp(Eigen::Index Ndegree){
         
         auto pmin = m_p.eval(m_p.xmin);
@@ -605,7 +669,7 @@ private:
         return detail::dyadic_splitting<decltype(func), CE_t>(Ndegree, func, log(pmin), log(pmax), 3, 1e-12, 26);
     }
     
-    using PropertyPairs = properties::PropertyPairs;
+    using PropertyPairs = properties::PropertyPairs; ///< A convenience alias to save some typing
     
 public:
     /// Reading in a data structure in the JSON format of https://pubs.aip.org/aip/jpr/article/53/1/013102/3270194
@@ -617,8 +681,16 @@ public:
     m_invlnp(std::move(make_invlnp(m_p.get_expansions()[0].coeff().size()-1)))
     {};
     
+    /** Load the superancillary with the data passed in as a string blob. This constructor delegates directly to the the one that consumes JSON
+     * \param s The string-encoded JSON data for the superancillaries
+     */
     SuperAncillary(const std::string& s) : SuperAncillary(nlohmann::json::parse(s)) {};
     
+    /** Get a const reference to a ChebyshevApproximation1D
+     
+     \param k The key for the property (D,S,H,P,U)
+     \param Q The vapor quality, either 0 or 1
+     */
     const auto& get_approx1d(char k, short Q) const {
         auto get_or_throw = [&](const auto& v) -> const auto& {
             if (v){
@@ -637,9 +709,14 @@ public:
             default: throw std::invalid_argument("Bad key of '" + std::string(1, k) + "'");
         }
     }
+    /// Get a const reference to the inverse approximation for T(ln(p))
     const auto& get_invlnp(){ return m_invlnp; }
     
-    /// Using the provided function that gives y(T, rho), build the ancillaries for this variable based on the ancillaries for rhoL and rhoV
+    /**
+     Using the provided function that gives y(T, rho), build the ancillaries for this variable based on the ancillaries for rhoL and rhoV
+     \param var The key for the property (H,S,U)
+     \param caller A function that takes temperature and molar density and returns the property of interest, molar enthalpy in the case of H, etc.
+     */
     void add_variable(char var, const std::function<double(double, double)> & caller){
         Eigen::MatrixXd Lmat, Umat;
         std::tie(Lmat, Umat) = detail::get_LU_matrices(12);
@@ -681,7 +758,11 @@ public:
         }
     }
     
-    /// Given the value of Q in {0,1},
+    /** Given the value of Q in {0,1}, evaluate one of the the ChebyshevApproximation1D
+     \param T Temperature, in K
+     \param k Property key, in {D,P,H,S,U}
+     \param Q Vapor quality, in {0,1}
+     */
     double eval_sat(double T, char k, short Q) const {
         if (Q == 1 || Q == 0){
             return get_approx1d(k, Q).eval(T);
@@ -691,6 +772,9 @@ public:
         }
     }
     
+    /**
+    A vectorized version of eval_sat for wrapping in Python interface and profiling
+     */
     template <typename Container>
     void eval_sat_many(const Container& T, char k, short Q, Container& y) const {
         if (T.size() != y.size()){ throw std::invalid_argument("x and y are not the same size"); }
@@ -700,14 +784,24 @@ public:
         }
     }
     
+    /** A convenience function to pass off to the ChebyshevApproximation1D and do an inversion calculation for a value of the variable for a saturated state
+     
+     \param propval The value of the property
+     \param k Property key, in {D,P,H,S,U}
+     \param Q Vapor quality, in {0,1}
+     \param bits passed to toms748 algorithm
+     \param max_iter Maximum allowed number of function calls
+     \param boundsftol A functional value stopping condition to test on the endpoints
+     */
     auto solve_for_T(double propval, char k, bool Q, unsigned int bits=64, unsigned int max_iter=100, double boundsftol=1e-13) const{
         return get_approx1d(k, Q).get_x_for_y(propval, bits, max_iter, boundsftol);
     }
     
     /** Get the non-iterative vapor quality q given the temperature T and the value of the thermodynamic variable
     \param T Temperature, in K
-    \param propval The given thermodynamic variable
-    \param k The key for the variable of interest
+    \param propval The value of the given thermodynamic variable
+    \param k Property key, in {D,P,H,S,U}
+     \returns The non-iterative vapor quality based on the values from the superancillary functions
     */
     auto get_vaporquality(double T, double propval, char k) const {
         if (k == 'D'){
@@ -725,13 +819,19 @@ public:
     
     /**
      \brief Use the inverted pressure superancillary to calculate temperature given pressure
+     \param p The pressure (not its logarithm!), in Pa
+     \returns T The temperature, in K
      */
     auto get_T_from_p(double p) const{
         return m_invlnp.eval(log(p));
     }
     
     /**
-     \brief Return the evaluated value of $
+     \brief Return the evaluated value of the thermodynamic variable, given the temperature and vapor quality.
+     
+     \param T Temperature, in K
+     \param q Vapor quality, in [0,1]
+     \param k Property key, in {D,P,H,S,U}
      */
     auto get_yval(double T, double q, char k) const{
             
@@ -749,6 +849,7 @@ public:
         }
     }
     
+    /// A vectorized version of get_yval for profiling in Python
     template <typename Container>
     void get_yval_many(const Container& T, char k, const Container& q, Container& y) const{
         if (T.size() != y.size() || T.size() != q.size()){ throw std::invalid_argument("T, q, and y are not all the same size"); }
@@ -771,7 +872,12 @@ public:
             }
         }
     }
-    /** Determine the values of temperature that correspond to intersections with the superancillary function
+    /** Determine all the values of temperature that correspond to intersections with the superancillary function, for both the vapor and liquid phases
+     \param k Property key, in {D,P,H,S,U}
+     \param val Value of the thermodynamic variable
+     \param bits passed to toms748 algorithm
+     \param max_iter Maximum allowed number of function calls
+     \param boundsftol A functional value stopping condition to test on the endpoints
     */
     auto get_all_intersections(const char k, const double val, unsigned int bits, std::size_t max_iter, double boundsftol) const{
         const auto& L = get_approx1d(k, 0);
@@ -786,7 +892,22 @@ public:
 //                     std::make_move_iterator(TsatV.end()));
         return TsatL;
     }
-    auto iterate_for_Tq_XY(double Tmin, double Tmax, char ch1, double val1, char ch2, double val2, unsigned int bits, std::size_t max_iter, double boundsftol) const -> std::optional<SuperAncillaryTwoPhaseSolution>{
+    
+    /**
+    \brief Iterate to find a value of temperature and vapor quality corresponding to the two given thermodynamic variables, if such a solution exists. This is the lower-level function used by the solve_XX methods
+     
+     \note The temperature range must bound the solution, you might need to call get_all_intersections and parse its solutions to construct bounded intervals
+     \param Tmin Minimum temperature, in K
+     \param Tmax Maximum temperature, in K
+     \param ch1 The key for the first variable, in {T,D,P,H,S,U}
+     \param val1 The value for the first variable
+     \param ch2 The key for the second variable, in {T,D,P,H,S,U}
+     \param val2 The value for the second variable
+     \param bits passed to toms748 algorithm
+     \param max_iter Maximum allowed number of function calls
+     \param boundsftol A functional value stopping condition to test on the endpoints
+     */
+    std::optional<SuperAncillaryTwoPhaseSolution> iterate_for_Tq_XY(double Tmin, double Tmax, char ch1, double val1, char ch2, double val2, unsigned int bits, std::size_t max_iter, double boundsftol) const {
         
         std::size_t counter = 0;
         auto f = [&](double T_){
@@ -834,7 +955,16 @@ public:
         }
     }
     
-    auto solve_for_Tq_DX(const double rho, const double propval, const char k, unsigned int bits, std::size_t max_iter, double boundsftol) const -> std::optional<SuperAncillaryTwoPhaseSolution> {
+    /**
+     Given a saturated density and another property other than T, solve for the temperature and vapor quality
+     \param rho The molar density
+     \param propval The value of the other property
+     \param k Property key, in {D,P,H,S,U}
+     \param bits passed to toms748 algorithm
+     \param max_iter Maximum allowed number of function calls
+     \param boundsftol A functional value stopping condition to test on the endpoints
+     */
+    std::optional<SuperAncillaryTwoPhaseSolution> solve_for_Tq_DX(const double rho, const double propval, const char k, unsigned int bits, std::size_t max_iter, double boundsftol) const {
         
         const auto& Lrho = get_approx1d('D', 0);
         const auto& Vrho = get_approx1d('D', 1);
@@ -858,6 +988,7 @@ public:
         return iterate_for_Tq_XY(a, b, 'D', rho, k, propval, bits, max_iter, boundsftol);
     }
     
+    /// A vectorize version of solve_for_Tq_DX for use in the Python interface for profiling
     template <typename Container>
     void solve_for_Tq_DX_many(const Container& rho, const Container& propval, const char k, unsigned int bits, std::size_t max_iter, double boundsftol, Container& T, Container& q, Container& count){
         if (std::set<std::size_t>({rho.size(), propval.size(), T.size(), q.size(), count.size()}).size() != 1){
@@ -879,6 +1010,13 @@ public:
         }
     }
     
+    /**
+    The high-level function used to carry out a solution. It handles all the different permutations of variables and delegates to lower-level functions to actually od the calculations
+     
+     \param pair The enumerated pair of thermodynamic variables being provided
+     \param val1 The first value
+     \param val2 The second value
+     */
     auto flash(PropertyPairs pair, double val1, double val2) const -> std::optional<SuperAncillaryTwoPhaseSolution>{
         double T, q;
         std::size_t counter = 0;
@@ -1026,6 +1164,7 @@ public:
         return std::nullopt;
     }
     
+    /// A vectorized version of the flash function used in the Python interface for profiling
     template <typename Container>
     void flash_many(const PropertyPairs ppair, const Container& val1, const Container& val2, Container& T, Container& q, Container& count){
         if (std::set<std::size_t>({val1.size(), val2.size(), T.size(), q.size(), count.size()}).size() != 1){
