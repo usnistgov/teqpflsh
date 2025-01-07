@@ -2,7 +2,7 @@
 
 Routines for making use of superancillary equations and K-D trees to make iterative calculations with thermodynamic models much faster and much more reliable.
 
-Much more information in the docs. 
+Much more information in the docs.
 
 ## Docs
 
