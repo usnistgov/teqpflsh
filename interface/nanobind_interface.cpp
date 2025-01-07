@@ -13,6 +13,8 @@
 #include <nanobind/eigen/dense.h>
 
 #include "geos/geom/prep/PreparedGeometryFactory.h"
+#include "geos/simplify/DouglasPeuckerSimplifier.h"
+#include "geos/simplify/TopologyPreservingSimplifier.h"
 #include "geos/operation/valid/MakeValid.h"
 
 #define BOOST_MATH
@@ -143,6 +145,16 @@ NB_MODULE(_teqpflsh_impl, m) {
             return geos::geom::prep::PreparedGeometryFactory::prepare(self);
         })
         .def("getCentroid",  [](Geometry* t) { return t->getCentroid(); })
+        .def("run_DouglasPeuckerSimplifier", [](const Geometry* self, double tolerance){
+            geos::simplify::DouglasPeuckerSimplifier sim(self);
+            sim.setDistanceTolerance(tolerance);
+            return sim.getResultGeometry();
+        }, "tolerance"_a)
+        .def("run_TopologyPreservingSimplifier", [](const Geometry* self, double tolerance){
+            geos::simplify::TopologyPreservingSimplifier sim(self);
+            sim.setDistanceTolerance(tolerance);
+            return sim.getResultGeometry();
+        }, "tolerance"_a)
         .def("make_valid", [](const Geometry* self){
             return geos::operation::valid::MakeValid().build(self);
         })
