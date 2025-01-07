@@ -15,7 +15,7 @@ using namespace teqp::cppinterface;
 \f[
 \Lambda_{ij} = \varpi^i\rho^j\deriv{^{i+j}(\alpha)}{\varpi^i\partial\rho^j}{}
 \f]
- with \f$\varphi=1/T\f$
+ with \f$\varpi=1/T\f$
 */
 class HelmholtzInterface{
 public:

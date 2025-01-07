@@ -1847,7 +1847,7 @@ FORMULA_FONTSIZE       = 10
 # to create new LaTeX commands to be used in formulas as building blocks. See
 # the section "Including formulas" for details.
 
-FORMULA_MACROFILE      =
+FORMULA_MACROFILE      = doc/macros.tex
 
 # Enable the USE_MATHJAX option to render LaTeX formulas using MathJax (see
 # https://www.mathjax.org) which uses client side JavaScript for the rendering
@@ -1858,7 +1858,7 @@ FORMULA_MACROFILE      =
 # The default value is: NO.
 # This tag requires that the tag GENERATE_HTML is set to YES.
 
-USE_MATHJAX            = NO
+USE_MATHJAX            = YES
 
 # With MATHJAX_VERSION it is possible to specify the MathJax version to be used.
 # Note that the different versions of MathJax have different requirements with
