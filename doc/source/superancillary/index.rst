@@ -6,4 +6,4 @@ SuperAncillary
    :caption: Contents:
 
    SuperancillaryWater
-   SuperancillaryIteration
+   SuperancillaryIterations
