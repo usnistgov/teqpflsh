@@ -9,11 +9,37 @@ namespace teqpflsh::properties::interfaces{
 
 using namespace teqp::cppinterface;
 
-// ABC for interfaces, defining what functions must be implemented by thermodynamic model implementations
+/** ABC for interfaces, defining what functions must be implemented by thermodynamic model implementations
+
+ We use the nomenclature
+\f[
+\Lambda_{ij} = \varpi^i\rho^j\deriv{^{i+j}(\alpha)}{\varpi^i\partial\rho^j}{}
+\f]
+ with \f$\varphi=1/T\f$
+*/
 class HelmholtzInterface{
 public:
-    virtual Eigen::Array33d get_Armat2(const double T, const double rho, const Eigen::ArrayXd& z) const = 0;
-    virtual std::tuple<double, double, double> get_A00A10A01(const double T, const double rho, const Eigen::ArrayXd& z) const = 0;
+    /**
+     Return the matrix of values obtained from derivatives of the reduced Helmholtz energy. Entries are of the form
+     \f[
+     A^{\rm r}_{i,j} =\Lambda^{\rm (ig)}_{ij} + \Lambda^{\rm r}_{ij}
+     \f]
+     where it is the sum of the residual and ideal-gas portions that go into the matrix
+     
+     The matrix is constructed in this way because autodiff allows the rows and columns of pure derivatives (i=0 and j=0) to be obtained as a single operation
+     \param T Temperature, in K
+     \param rho Molar density, in mol/m^3
+     \param molefrac mole fractions
+     */
+    virtual Eigen::Array33d get_Armat2(const double T, const double rho, const Eigen::ArrayXd& molefrac) const = 0;
+    /**
+     \brief Return a tuple of the values \f$\Lambda_{00}\f$, \f$\Lambda_{10}\f$, and \f$\Lambda_{01}\f$ where each term is a sum of the residual and ideal-gas contributions
+     \param T Temperature, in K
+     \param rho Molar density, in mol/m^3
+     \param molefrac mole fractions
+     */
+    virtual std::tuple<double, double, double> get_A00A10A01(const double T, const double rho, const Eigen::ArrayXd& molefrac) const = 0;
+    
     virtual ~HelmholtzInterface() = default;
 };
 
