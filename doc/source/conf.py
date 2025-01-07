@@ -30,9 +30,8 @@ import teqpflsh
 release = teqpflsh.__version__
 
 # -- Execute all notebooks --------------------------------------------------
-if not on_actions:
-    import sphinx_pre_run
-    sphinx_pre_run.run()
+import sphinx_pre_run
+sphinx_pre_run.run()
 
 ### -- Auto-generate API documentation -----------------------------------------
 subprocess.check_output(f'sphinx-apidoc --private -f -o api {os.path.dirname(teqpflsh.__file__)}', shell=True, cwd=here)
