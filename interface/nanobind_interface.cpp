@@ -12,6 +12,8 @@
 #include <nanobind/ndarray.h>
 #include <nanobind/eigen/dense.h>
 
+#include "geos/geom/prep/PreparedGeometryFactory.h"
+
 #define BOOST_MATH
 
 #include "teqpflsh/polymath.hpp"
@@ -99,11 +101,6 @@ NB_MODULE(_teqpflsh_impl, m) {
         .def("createPolygon", &GeometryFactory::createGeometry)
     ;
     
-    nb::class_<Point>(m, "Point")
-        .def("getX", &Point::getX)
-        .def("getY", &Point::getY)
-    ;
-    
     nb::class_<CoordinateSequence>(m, "CoordinateSequence")
         .def(nb::init<>())
         .def("add", [](CoordinateSequence &cs, double x, double y) { cs.add(x,y); })
@@ -111,6 +108,12 @@ NB_MODULE(_teqpflsh_impl, m) {
         .def("getY", &CoordinateSequence::getY)
         .def("closeRing", &CoordinateSequence::closeRing)
         .def("getSize", &CoordinateSequence::getSize)
+    ;
+    
+    using namespace geos::geom::prep;
+    nb::class_<PreparedGeometry>(m, "PreparedGeometry")
+        .def("contains", &PreparedGeometry::contains)
+        .def("nearestPoints", &PreparedGeometry::nearestPoints)
     ;
     
     nb::class_<Geometry>(m, "Geometry")
@@ -135,10 +138,16 @@ NB_MODULE(_teqpflsh_impl, m) {
         .def("getCoordinates", &Geometry::getCoordinates)
         .def_prop_ro("isValid", &Geometry::isValid)
         .def_prop_ro("isSimple", &Geometry::isSimple)
-    
+        .def("get_PreparedGeometry", [](const Geometry* self){
+            return geos::geom::prep::PreparedGeometryFactory::prepare(self);
+        })
         .def("getCentroid",  [](Geometry* t) { return t->getCentroid(); })
     ;
     
+    nb::class_<Point, Geometry>(m, "Point")
+        .def("getX", &Point::getX)
+        .def("getY", &Point::getY)
+    ;
     
     //  *****************************************************************************
     //  *****************************************************************************
