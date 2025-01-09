@@ -75,34 +75,34 @@ jobs:
          name: dist
          pattern: dist-*
 
-  testpypi-publish:
-    name: Upload to TestPyPI
-    needs: [merge_wheels]
-    runs-on: ubuntu-latest
-    environment:
-      name: testpypi
-    permissions:
-      id-token: write  # IMPORTANT: this permission is mandatory for trusted publishing
-    steps:
-    - uses: actions/setup-python@v5
-      with:
-        python-version: '3.12'
+  # testpypi-publish:
+  #   name: Upload to TestPyPI
+  #   needs: [merge_wheels]
+  #   runs-on: ubuntu-latest
+  #   environment:
+  #     name: testpypi
+  #   permissions:
+  #     id-token: write  # IMPORTANT: this permission is mandatory for trusted publishing
+  #   steps:
+  #   - uses: actions/setup-python@v5
+  #     with:
+  #       python-version: '3.12'
 
-    - uses: actions/download-artifact@v4
-      with:
-        name: dist
-        path: dist
+  #   - uses: actions/download-artifact@v4
+  #     with:
+  #       name: dist
+  #       path: dist
 
-    - run: |
-        set -x
-        ls -R
-        du -sh
+  #   - run: |
+  #       set -x
+  #       ls -R
+  #       du -sh
 
-    - uses: pypa/gh-action-pypi-publish@release/v1.9
-      with:
-        repository-url: https://test.pypi.org/legacy/
-        password: ${{ secrets.TESTPYPI_TOKEN }}
-        skip-existing: true
+  #   - uses: pypa/gh-action-pypi-publish@release/v1.9
+  #     with:
+  #       repository-url: https://test.pypi.org/legacy/
+  #       password: ${{ secrets.TESTPYPI_TOKEN }}
+  #       skip-existing: true
 
   pypi-publish:
     name: Upload to PyPI if release
