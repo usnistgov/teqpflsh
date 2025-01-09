@@ -4,7 +4,7 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "teqpflsh"
-version = "0.0.3"
+version = "0.0.4dev"
 description = "Flash calculations with guesses powered by K-D trees"
 readme = "README.md"
 requires-python = ">=3.12"
