@@ -248,6 +248,8 @@ NB_MODULE(_teqpflsh_impl, m) {
      .def("sample_gridded_w_tree", &QuadRegion2D::sample_gridded_w_tree<tensor1d>)
     ;
     
+    m.def("sample_random", &::sample_random<tensor1d>);
+    
     using env = QuadRegion2D::Envelope;
     nb::class_<env>(m, "Envelope")
         .def_ro("x_min", &env::x_min)

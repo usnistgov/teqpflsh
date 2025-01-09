@@ -22,6 +22,71 @@ namespace teqpflsh {
 
 using ArrayType = Eigen::ArrayXd;
 
+
+/**
+ Derived from: https://stackoverflow.com/a/47418580
+ */
+template<typename Geo, typename Generator>
+auto point_in_triangle(const Geo&tri, Generator& gen){
+    std::uniform_real_distribution<> uni;
+    auto co = tri->getCoordinates();
+    
+    auto r1 = uni(gen), r2 = uni(gen);
+    auto q = std::abs(r1 - r2);
+    auto s = q;
+    auto t = 0.5 * (r1 + r2 - q);
+    auto u = 1 - 0.5 * (q + r1 + r2);
+    auto x = s * co->getX(0) + t * co->getX(1) + u * co->getX(2);
+    auto y = s * co->getY(0) + t * co->getY(1) + u * co->getY(2);
+    return std::make_tuple(x, y);
+}
+
+template <class T, class = void>
+struct has_operatorbracket1 : std::false_type {};
+
+template <class T>
+struct has_operatorbracket1 < T,
+            std::void_t<decltype(std::declval<T>()[0])>> :
+            std::true_type {};
+
+/// Sample a given number of points that are within the polygon by first doing triangulation of
+/// the bounding polygon with triangulation, sampling the triangles according to their relative
+/// area, and then randomly sampling a point inside a triangle
+template<typename Container>
+void sample_random(const Geometry* geo, std::size_t Nsamples, Container& destx, Container& desty){
+    if(destx.size() != Nsamples){ throw std::invalid_argument("destx size does not equal Nsamples"); }
+    if(desty.size() != Nsamples){ throw std::invalid_argument("desty size does not equal Nsamples"); }
+    
+    auto tri = geos::triangulate::polygon::PolygonTriangulator::triangulate(geo);
+    
+    // Get the areas for each triangle
+    auto Ntri = tri->getNumGeometries();
+    std::vector<double> areas(Ntri);
+    for (auto igeo = 0U; igeo < Ntri; ++igeo){
+        areas[igeo] = tri->getGeometryN(igeo)->getArea();
+    }
+    // Prepare the weighting function
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::discrete_distribution<> d(areas.begin(), areas.end());
+    
+    for (auto rngcounter = 0U; rngcounter < Nsamples; ++rngcounter){
+        // Randomly select a triangle within the triangulation weighted according to
+        // its relative area.
+        auto selected_triangle = tri->getGeometryN(d(gen));
+        // And select a point within this triangle
+        auto [x, y] = point_in_triangle(selected_triangle, gen);
+        if constexpr(has_operatorbracket1<Container>::value){
+            destx[rngcounter] = x;
+            desty[rngcounter] = y;
+        }
+        else{
+            destx(rngcounter) = x;
+            desty(rngcounter) = y;
+        }
+    }
+}
+
 /**
  This class is a generic type that represents a 2D region defined by its bounding envelope
  which is expected to be a closed & non-intersecting polygon. A quadtree can be constructed covering the
@@ -172,39 +237,7 @@ public:
     /// area, and then randomly sampling a point inside a triangle
     template<typename Container>
     void sample_random(std::size_t Nsamples, Container& destx, Container& desty){
-        if(destx.size() != Nsamples){ throw std::invalid_argument("destx size does not equal Nsamples"); }
-        if(desty.size() != Nsamples){ throw std::invalid_argument("desty size does not equal Nsamples"); }
-        
-        
-        auto tri = do_fast_triangulation();
-        
-        
-        // Get the areas for each triangle
-        auto Ntri = tri->getNumGeometries();
-        std::vector<double> areas(Ntri);
-        for (auto igeo = 0U; igeo < Ntri; ++igeo){
-            areas[igeo] = tri->getGeometryN(igeo)->getArea();
-        }
-        // Prepare the weighting function
-        std::random_device rd;
-        std::mt19937 gen(rd());
-        std::discrete_distribution<> d(areas.begin(), areas.end());
-        
-        for (auto rngcounter = 0U; rngcounter < Nsamples; ++rngcounter){
-            // Randomly select a triangle within the triangulation weighted according to
-            // its relative area.
-            auto selected_triangle = tri->getGeometryN(d(gen));
-            // And select a point within this triangle
-            auto [x, y] = point_in_triangle(selected_triangle, gen);
-            if constexpr(has_operatorbracket1<Container>::value){
-                destx[rngcounter] = x;
-                desty[rngcounter] = y;
-            }
-            else{
-                destx(rngcounter) = x;
-                desty(rngcounter) = y;
-            }
-        }
+        return teqpflsh::sample_random<Container>(m_bounding_polygon.get(), Nsamples, destx, desty);
     }
     
     /**
@@ -783,11 +816,11 @@ public:
                     auto& r = optsoln.value();
 //                    runtime_check_that(r.phases.size() > 0);
                     T(i) = r.T_K;
-                    rho(i) = r.rhobulk_molm3;
+//                    rho(i) = r.rhobulk_molm3;
                     q(i) = r.phases.front().qmolar;
                 }
             }catch(std::exception&e){
-                std::cout << e.what() << std::endl;
+//                std::cout << e.what() << std::endl;
                 T(i) = -1;
                 rho(i) = -1;
                 q(i) = -1;
